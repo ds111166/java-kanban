@@ -5,25 +5,25 @@ import java.util.Objects;
 public class Task {
 
     protected Integer id;
-    protected String title;
+    protected String name;
     protected String description;
     protected Status status;
 
-    public Task(String title, String description) {
-        this.title = title;
+    public Task(String name, String description) {
+        this.name = name;
         this.description = description;
         this.status = Status.NEW;
     }
 
-    public Task(String title, String description, Status status) {
-        this.title = title;
+    public Task(String name, String description, Status status) {
+        this.name = name;
         this.description = description;
         this.status = status;
     }
 
-    public Task(int id, String title, String description, Status status) {
+    public Task(int id, String name, String description, Status status) {
         this.id = id;
-        this.title = title;
+        this.name = name;
         this.description = description;
         this.status = status;
     }
@@ -44,12 +44,12 @@ public class Task {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {
@@ -64,7 +64,7 @@ public class Task {
     public int hashCode() {
         int hash = 7;
         hash = 47 * hash + Objects.hashCode(this.id);
-        hash = 47 * hash + Objects.hashCode(this.title);
+        hash = 47 * hash + Objects.hashCode(this.name);
         hash = 47 * hash + Objects.hashCode(this.description);
         hash = 47 * hash + Objects.hashCode(this.status);
         return hash;
@@ -82,10 +82,10 @@ public class Task {
             return false;
         }
         final Task other = (Task) obj;
-        if (this.id != other.id) {
+        if (!this.id.equals(other.id)) {
             return false;
         }
-        if (!Objects.equals(this.title, other.title)) {
+        if (!Objects.equals(this.name, other.name)) {
             return false;
         }
         if (!Objects.equals(this.description, other.description)) {
@@ -99,7 +99,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" + "id=" + id + ", title=" + title + ", description=" + description + ", status=" + status + '}';
+        return "Task{" + "id=" + id + ", name=" + name + ", description=" + description + ", status=" + status + '}';
     }
 
 }

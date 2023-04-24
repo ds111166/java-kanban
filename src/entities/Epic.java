@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class Epic extends Task {
-    ArrayList<Integer> subtaskIds;
+    protected ArrayList<Integer> subtaskIds;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -45,10 +45,10 @@ public class Epic extends Task {
             return false;
         }
         final Epic other = (Epic) obj;
-        if (this.id != other.id) {
+        if (!this.id.equals(other.id)) {
             return false;
         }
-        if (!Objects.equals(this.title, other.title)) {
+        if (!Objects.equals(this.name, other.name)) {
             return false;
         }
         if (!Objects.equals(this.description, other.description)) {
@@ -57,16 +57,37 @@ public class Epic extends Task {
         if (this.status != other.status) {
             return false;
         }
-        if (!Objects.equals(this.subtaskIds, other.subtaskIds)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.subtaskIds, other.subtaskIds);
     }
 
 
     @Override
     public String toString() {
 
-        return "Epic{" + "id=" + id + ", title=" + title + ", description=" + description + ", status=" + status + ", subtaskIds=" + Arrays.toString(subtaskIds.toArray()) + '}';
+        return "Epic{" + "id=" + id + ", name=" + name + ", description=" + description + ", status=" + status + ", subtaskIds=" + Arrays.toString(subtaskIds.toArray()) + '}';
+    }
+
+    /**
+     * Очищает список идентификаторов подзадач
+     */
+    public void cleanSubtaskIds() {
+        subtaskIds.clear();
+    }
+
+    /**
+     * добавляет идентификтор подзадачи в список подзадач эпика
+     * @param id  - идентификтор подзадач
+     */
+    public void addSubtaskId(Integer id) {
+        if(!subtaskIds.contains(id)){
+            subtaskIds.add(id);
+        }
+    }
+    /**
+     * удаляет идентификтор подзадачи в список подзадач эпика
+     * @param id - идентификтор подзадач
+     */
+    public void removeSubtask(Integer id) {
+        subtaskIds.remove(id);
     }
 }
