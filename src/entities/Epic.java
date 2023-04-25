@@ -76,15 +76,18 @@ public class Epic extends Task {
 
     /**
      * добавляет идентификтор подзадачи в список подзадач эпика
-     * @param id  - идентификтор подзадач
+     *
+     * @param id - идентификтор подзадач
      */
     public void addSubtaskId(Integer id) {
-        if(!subtaskIds.contains(id)){
+        if (!subtaskIds.contains(id)) {
             subtaskIds.add(id);
         }
     }
+
     /**
      * удаляет идентификтор подзадачи в список подзадач эпика
+     *
      * @param id - идентификтор подзадач
      */
     public void removeSubtask(Integer id) {
