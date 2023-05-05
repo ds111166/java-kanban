@@ -1,5 +1,7 @@
 import entities.Epic;
+import manager.Managers;
 import manager.TaskManager;
+import manager.InMemoryTaskManager;
 import entities.Status;
 import entities.Subtask;
 import entities.Task;
@@ -10,7 +12,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        TaskManager taskManager = new TaskManager();
+        TaskManager taskManager = Managers.getDefault();
 
         Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
         Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
