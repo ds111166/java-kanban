@@ -66,6 +66,22 @@ public class Main {
         System.out.println("Подзадача 2, удалена");
 
         System.out.println(epic1);
+
+        System.out.println("История просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
+
+        epic1 = taskManager.getEpic(epicId1);
+        epic1 = taskManager.getEpic(epicId1);
+        epic1 = taskManager.getEpic(epicId1);
+        task1 = taskManager.getTask(taskId1);
+        task1 = taskManager.getTask(taskId1);
+
+        System.out.println("История просмотров задач 2: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
     }
 
 }

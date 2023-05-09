@@ -1,12 +1,11 @@
 package manager;
 
 import entities.Epic;
-import entities.Status;
 import entities.Subtask;
 import entities.Task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Хранилище данных
@@ -16,20 +15,17 @@ import java.util.HashMap;
 public interface TaskManager {
 
 
-
-
-
     /**
      * получить список всех задач
      *
      * @return список всех задач
      */
-    public ArrayList<Task> getTasks();
+    ArrayList<Task> getTasks();
 
     /**
      * удалить все задачи
      */
-    public void deleteTasks();
+    void deleteTasks();
 
     /**
      * получение задачи по идентификатору
@@ -37,7 +33,7 @@ public interface TaskManager {
      * @param id идентификатор задачи
      * @return задача
      */
-    public Task getTask(int id);
+    Task getTask(int id);
 
     /**
      * создать задачу
@@ -45,33 +41,33 @@ public interface TaskManager {
      * @param newTask задача
      * @return идентификатор задачи
      */
-    public Integer createTask(Task newTask);
+    Integer createTask(Task newTask);
 
     /**
      * обновить объкт Задача
      *
      * @param updatedTask Задача
      */
-    public void updateTask(Task updatedTask);
+    void updateTask(Task updatedTask);
 
     /**
      * удалить задачу по идентификатору
      *
      * @param id идентификатор задачи
      */
-    public void deleteTask(int id);
+    void deleteTask(int id);
 
     /**
      * получить все подзадачи
      *
      * @return список подзадач
      */
-    public ArrayList<Subtask> getSubtasks();
+    ArrayList<Subtask> getSubtasks();
 
     /**
      * Удаляет все подзадачи
      */
-    public void deleteSubtasks();
+    void deleteSubtasks();
 
     /**
      * получение подзадачи по идентификатору
@@ -79,7 +75,7 @@ public interface TaskManager {
      * @param id идентификатор подзадачи
      * @return Подзадача
      */
-    public Subtask getSubtask(int id);
+    Subtask getSubtask(int id);
 
     /**
      * создание подзадачи
@@ -87,33 +83,33 @@ public interface TaskManager {
      * @param newSubtask новая подзадача
      * @return идентификатор подзадачи
      */
-    public Integer createSubtask(Subtask newSubtask);
+    Integer createSubtask(Subtask newSubtask);
 
     /**
      * обновить объкт Задача
      *
      * @param updatedSubtask обновляемая подзадача
      */
-    public void updateSubtask(Subtask updatedSubtask);
+    void updateSubtask(Subtask updatedSubtask);
 
     /**
      * удаление подзадачи по идентификатору
      *
      * @param id идентификатор подзадачи
      */
-    public void deleteSubtask(int id);
+    void deleteSubtask(int id);
 
     /**
      * получить все эпики
      *
      * @return список всех эпиков
      */
-    public ArrayList<Epic> getEpics();
+    ArrayList<Epic> getEpics();
 
     /**
      * Удаление всех эпиков
      */
-    public void deleteEpics();
+    void deleteEpics();
 
     /**
      * получение эпика по идентификатору
@@ -121,7 +117,7 @@ public interface TaskManager {
      * @param id идентификатор эпика
      * @return эпик
      */
-    public Epic getEpic(int id);
+    Epic getEpic(int id);
 
     /**
      * создание эпика
@@ -129,21 +125,21 @@ public interface TaskManager {
      * @param newEpic новый эпик
      * @return идентификатор созданного эпика
      */
-    public Integer createEpic(Epic newEpic);
+    Integer createEpic(Epic newEpic);
 
     /**
      * Обновление эпика
      *
      * @param epic эпик
      */
-    public void updateEpic(Epic epic);
+    void updateEpic(Epic epic);
 
     /**
      * удаление эпика по идентификатору
      *
      * @param id идентификатор
      */
-    public void deleteEpic(int id);
+    void deleteEpic(int id);
 
     /**
      * получение списка всех подзадач эпика
@@ -151,9 +147,14 @@ public interface TaskManager {
      * @param epicId идентификатор эпика
      * @return список всех подзадач
      */
-    public ArrayList<Subtask> getEpicSubtasks(int epicId);
+    ArrayList<Subtask> getEpicSubtasks(int epicId);
 
-
+    /**
+     * Возвращает историю задач
+     *
+     * @return
+     */
+    List<Task> getHistory();
 
 }
 
