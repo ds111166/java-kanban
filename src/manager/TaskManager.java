@@ -4,7 +4,6 @@ import entities.Epic;
 import entities.Subtask;
 import entities.Task;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +19,7 @@ public interface TaskManager {
      *
      * @return список всех задач
      */
-    ArrayList<Task> getTasks();
+    List<Task> getTasks();
 
     /**
      * удалить все задачи
@@ -62,7 +61,7 @@ public interface TaskManager {
      *
      * @return список подзадач
      */
-    ArrayList<Subtask> getSubtasks();
+    List<Subtask> getSubtasks();
 
     /**
      * Удаляет все подзадачи
@@ -104,7 +103,7 @@ public interface TaskManager {
      *
      * @return список всех эпиков
      */
-    ArrayList<Epic> getEpics();
+    List<Epic> getEpics();
 
     /**
      * Удаление всех эпиков
@@ -147,7 +146,7 @@ public interface TaskManager {
      * @param epicId идентификатор эпика
      * @return список всех подзадач
      */
-    ArrayList<Subtask> getEpicSubtasks(int epicId);
+    List<Subtask> getEpicSubtasks(int epicId);
 
     /**
      * Возвращает историю задач

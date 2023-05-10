@@ -1,27 +1,28 @@
 package entities;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
 public class Epic extends Task {
-    protected ArrayList<Integer> subtaskIds;
+    protected List<Integer> subtaskIds;
 
     public Epic(String title, String description) {
         super(title, description);
         subtaskIds = new ArrayList<>();
     }
 
-    public Epic(ArrayList<Integer> subtaskIds, int id, String title, String description, Status status) {
+    public Epic(List<Integer> subtaskIds, int id, String title, String description, Status status) {
         super(id, title, description, status);
         this.subtaskIds = subtaskIds;
     }
 
-    public ArrayList<Integer> getSubtaskIds() {
+    public List<Integer> getSubtaskIds() {
         return subtaskIds;
     }
 
-    public void setSubtaskIds(ArrayList<Integer> subtaskIds) {
+    public void setSubtaskIds(List<Integer> subtaskIds) {
         this.subtaskIds = subtaskIds;
     }
 
