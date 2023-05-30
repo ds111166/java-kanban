@@ -80,7 +80,7 @@ public class Main {
             System.out.println(task);
         }
         taskManager.deleteEpic(epicId1);
-        
+
         task1 = taskManager.getTask(taskId1);
         task1 = taskManager.getTask(taskId1);
 
