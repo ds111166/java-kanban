@@ -1,4 +1,4 @@
-package manager;
+package history;
 
 import entities.Task;
 import java.util.List;
@@ -9,6 +9,11 @@ public interface HistoryManager {
      * @param task - задача
      */
     void add(Task task);
+
+    /**
+     * Удаляет задачу с идентификаторм id из истории
+     */
+    void remove(int id);
 
     /**
      * Возвращает истрию просмотров задач

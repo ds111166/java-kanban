@@ -58,12 +58,12 @@ public class Main {
         taskManager.updateSubtask(subtask1);
         System.out.println("Эпик 1, статус = " + epic1.getStatus());
 
-        taskManager.deleteTask(taskId2);
-        System.out.println("Задача 2, удалена");
+        //taskManager.deleteTask(taskId2);
+        //System.out.println("Задача 2, удалена");
 
         System.out.println(epic1);
-        taskManager.deleteSubtask(subtaskId2);
-        System.out.println("Подзадача 2, удалена");
+        //taskManager.deleteSubtask(subtaskId2);
+        //System.out.println("Подзадача 2, удалена");
 
         System.out.println(epic1);
 

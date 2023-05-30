@@ -1,6 +1,7 @@
 package manager;
 
-import entities.Task;
+import history.HistoryManager;
+import history.InMemoryHistoryManager;
 
 public class Managers {
     /**

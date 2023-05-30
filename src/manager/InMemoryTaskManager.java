@@ -4,6 +4,7 @@ import entities.Epic;
 import entities.Status;
 import entities.Subtask;
 import entities.Task;
+import history.HistoryManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,6 +70,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteTask(int id) {
         tasks.remove(id);
+        history.remove(id);
     }
 
     @Override
@@ -133,6 +135,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask == null) {
             return;
         }
+        history.remove(id);
         Epic epic = epics.get(subtask.getEpicId());
         epic.removeSubtask(id);
         updateEpicStatus(epic.getId());
@@ -179,8 +182,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteEpic(int id) {
         final Epic epic = epics.remove(id);
+        history.remove(id);
         for (Integer subtaskId : epic.getSubtaskIds()) {
             subtasks.remove(subtaskId);
+            history.remove(subtaskId);
         }
     }
 
