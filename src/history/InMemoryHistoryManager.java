@@ -41,12 +41,18 @@ public class InMemoryHistoryManager implements HistoryManager {
             idToNodeMap.remove(id);
         }
 
+        /**
+         * Возвращает список задачь в истории
+         * @return
+         */
         public List<Task> getTasks() {
             List<Task> tasks = new ArrayList<>();
             Node nextNode = this.head.getNext();
             while (nextNode != null ) {
                 final Task task = nextNode.getData();
-                tasks.add(task);
+                if(task!=null){
+                    tasks.add(task);
+                }
                 nextNode = nextNode.getNext();
             }
             return tasks;

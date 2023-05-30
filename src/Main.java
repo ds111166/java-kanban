@@ -58,27 +58,33 @@ public class Main {
         taskManager.updateSubtask(subtask1);
         System.out.println("Эпик 1, статус = " + epic1.getStatus());
 
-        //taskManager.deleteTask(taskId2);
-        //System.out.println("Задача 2, удалена");
 
-        System.out.println(epic1);
-        //taskManager.deleteSubtask(subtaskId2);
-        //System.out.println("Подзадача 2, удалена");
-
-        System.out.println(epic1);
-
-        System.out.println("История просмотров задач: ");
+        System.out.println("\nИстория просмотров задач 1: ");
         for (Task task : taskManager.getHistory()) {
             System.out.println(task);
         }
+        System.out.println();
 
-        epic1 = taskManager.getEpic(epicId1);
-        epic1 = taskManager.getEpic(epicId1);
-        epic1 = taskManager.getEpic(epicId1);
+        taskManager.deleteTask(taskId2);
+        System.out.println("\nЗадача 2, удалена");
+
+        System.out.println(epic1);
+
+        taskManager.deleteSubtask(subtaskId2);
+        System.out.println("\nПодзадача 2, удалена\n");
+
+        System.out.println(epic1);
+
+        System.out.println("\nИстория просмотров задач 2: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
+        taskManager.deleteEpic(epicId1);
+        
         task1 = taskManager.getTask(taskId1);
         task1 = taskManager.getTask(taskId1);
 
-        System.out.println("История просмотров задач 2: ");
+        System.out.println("\nИстория просмотров задач 3: ");
         for (Task task : taskManager.getHistory()) {
             System.out.println(task);
         }
