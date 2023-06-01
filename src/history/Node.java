@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public class Node {
 
-    private final Task data;
+    private Task data;
     private Node next;
     private Node prev;
 
