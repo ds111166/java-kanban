@@ -5,116 +5,91 @@ import entities.Task;
 import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    static class CustomLinkedList {
-        private final Node head;
-        private final Node tail;
-        private final Map<Integer, Node> idToNodeMap;
-
-        public CustomLinkedList() {
-            this.idToNodeMap = new HashMap<>();
-            this.head = new Node(null);
-            this.tail = new Node(null);
-            this.head.setNext(this.tail);
-            this.tail.setPrev(this.head);
-        }
-
-        /**
-         * Добавляет задачу task в список
-         */
-        public void add(Task task) {
-            if (task == null) return;
-            final Integer id = task.getId();
-            Node node = idToNodeMap.get(id);
-            if (node != null) {
-                removeNode(node);
-            }
-            linkLast(task);
-        }
-
-        /**
-         * Удаляет задачу с идентификатором int id из списка
-         */
-        public void remove(int id) {
-            Node node = idToNodeMap.get(id);
-            if (node == null) return;
-            removeNode(node);
-            idToNodeMap.remove(id);
-        }
-
-        /**
-         * Возвращает список задачь в истории
-         * @return
-         */
-        public List<Task> getTasks() {
-            List<Task> tasks = new ArrayList<>();
-            Node nextNode = this.head.getNext();
-            while (nextNode != null ) {
-                final Task task = nextNode.getData();
-                if(task!=null){
-                    tasks.add(task);
-                }
-                nextNode = nextNode.getNext();
-            }
-            return tasks;
-        }
-
-
-        @Override
-        public String toString() {
-            return "CustomLinkedList{" +
-                    "head=" + head +
-                    ", tail=" + tail +
-                    ", idToNodeMap=" + idToNodeMap +
-                    '}';
-        }
-
-        /**
-         * Добавляет задачу task в конец списка
-         */
-        private void linkLast(Task task) {
-            final Node prev = tail.getPrev();
-            final Node node = new Node(task);
-            node.setPrev(prev);
-            prev.setNext(node);
-            node.setNext(tail);
-            tail.setPrev(node);
-            idToNodeMap.put(task.getId(), node);
-        }
-
-        /**
-         * Удаляет узел node из списка
-         */
-        private void removeNode(Node node) {
-            if (node == null) return;
-            final Node nodePrev = node.getPrev();
-            final Node nodeNext = node.getNext();
-            if(nodePrev !=null){
-                nodePrev.setNext(nodeNext);
-            }
-            if(nodeNext != null){
-                nodeNext.setPrev(nodePrev);
-            }
-        }
-    }
-
-    private final CustomLinkedList history;
+    private Node first;
+    private Node last;
+    private final Map<Integer, Node> history;
 
     public InMemoryHistoryManager() {
-        this.history = new CustomLinkedList();
+        this.history = new HashMap<>();
     }
 
     @Override
     public void add(Task task) {
-        history.add(task);
+
+        if (task == null) {
+            return;
+        }
+        final int id = task.getId();
+        if (history.containsKey(id)) {
+            final Node node = history.remove(id);
+            removeNode(node);
+        }
+        linkLast(task);
     }
 
     @Override
     public void remove(int id) {
-        history.remove(id);
+
+        final Node node = history.remove(id);
+        removeNode(node);
     }
 
     @Override
     public List<Task> getHistory() {
-        return history.getTasks();
+        return getTasks();
+    }
+
+    /**
+     * Добавляет задачу task в конец списка
+     */
+    private void linkLast(Task task) {
+
+        final Node node = new Node(task, last, null);
+        if (first == null) {
+            first = node;
+        } else {
+            last.setNext(node);
+        }
+        last = node;
+        history.put(task.getId(), node);
+    }
+
+    /**
+     * Удаляет узел node из списка
+     */
+    private void removeNode(Node node) {
+
+        if (node == null) {
+            return;
+        }
+        Node nodePrev = node.getPrev();
+        Node nodeNext = node.getNext();
+        if (nodePrev != null) {
+            nodePrev.setNext(nodeNext);
+        } else {
+            first = nodeNext;
+        }
+        if (nodeNext != null) {
+            nodeNext.setPrev(nodePrev);
+        } else {
+            last = nodePrev;
+        }
+    }
+
+    /**
+     * Возвращает список задач в истории
+     */
+    private List<Task> getTasks() {
+
+        List<Task> tasks = new ArrayList<>();
+        Node nextNode = first;
+        while (nextNode != null) {
+            final Task task = nextNode.getData();
+            if (task != null) {
+                tasks.add(task);
+            }
+            nextNode = nextNode.getNext();
+        }
+        return tasks;
     }
 }

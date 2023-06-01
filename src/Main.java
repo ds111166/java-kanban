@@ -16,6 +16,13 @@ public class Main {
 
         Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
         Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
+        Integer taskId3 = taskManager.createTask(new Task("Задача 3", "Это \"Задача 3\""));
+        Integer taskId4 = taskManager.createTask(new Task("Задача 4", "Это \"Задача 4\""));
+        Integer taskId5 = taskManager.createTask(new Task("Задача 5", "Это \"Задача 5\""));
+        Integer taskId6 = taskManager.createTask(new Task("Задача 6", "Это \"Задача 6\""));
+        Integer taskId7 = taskManager.createTask(new Task("Задача 7", "Это \"Задача 7\""));
+        Integer taskId8 = taskManager.createTask(new Task("Задача 8", "Это \"Задача 8\""));
+        Integer taskId9 = taskManager.createTask(new Task("Задача 9", "Это \"Задача 9\""));
 
         Integer epicId1 = taskManager.createEpic(new Epic("Эпик 1", "Это Эпик 1!"));
         Integer subtaskId1 = taskManager.createSubtask(new Subtask(epicId1, "Подзадача 1", "Подзадача 1 эпика 1"));
@@ -59,7 +66,7 @@ public class Main {
         System.out.println("Эпик 1, статус = " + epic1.getStatus());
 
 
-        System.out.println("\nИстория просмотров задач 1: ");
+        System.out.println("\n1 Просмотр истории просмотров задач: ");
         for (Task task : taskManager.getHistory()) {
             System.out.println(task);
         }
@@ -75,16 +82,50 @@ public class Main {
 
         System.out.println(epic1);
 
-        System.out.println("\nИстория просмотров задач 2: ");
+        System.out.println("\n2 Просмотр истории просмотров задач: ");
         for (Task task : taskManager.getHistory()) {
             System.out.println(task);
         }
         taskManager.deleteEpic(epicId1);
+        System.out.println("\nЭпик 1, удален");
+        System.out.println("\n3 Просмотр истории просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
 
-        task1 = taskManager.getTask(taskId1);
-        task1 = taskManager.getTask(taskId1);
+        taskManager.getTask(taskId1);
+        taskManager.getTask(taskId2);
+        taskManager.getTask(taskId3);
+        taskManager.getTask(taskId4);
+        taskManager.getTask(taskId5);
+        taskManager.getTask(taskId6);
+        taskManager.getTask(taskId7);
+        taskManager.getTask(taskId8);
+        taskManager.getTask(taskId9);
+        taskManager.getTask(taskId1);
+        taskManager.getTask(taskId1);
+        System.out.println("\n4 Просмотр истории просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
+        taskManager.deleteEpic(epicId2);
+        taskManager.deleteTask(taskId1);
+        taskManager.deleteTask(taskId2);
+        taskManager.deleteTask(taskId3);
+        taskManager.deleteTask(taskId4);
+        taskManager.deleteTask(taskId5);
+        taskManager.deleteTask(taskId6);
+        taskManager.deleteTask(taskId7);
+        taskManager.deleteTask(taskId8);
+        taskManager.deleteTask(taskId9);
+        System.out.println("\n5 Просмотр истории просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
 
-        System.out.println("\nИстория просмотров задач 3: ");
+        taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
+        taskManager.getTask(taskId1);
+        System.out.println("\n6 Просмотр истории просмотров задач: ");
         for (Task task : taskManager.getHistory()) {
             System.out.println(task);
         }

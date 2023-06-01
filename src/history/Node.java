@@ -10,8 +10,9 @@ import java.util.Objects;
 public class Node {
 
     private Task data;
-    private Node next;
     private Node prev;
+    private Node next;
+
 
     public Node(Task data) {
         this.data = data;
@@ -19,10 +20,11 @@ public class Node {
         this.prev = null;
     }
 
-    public Node(Task data, Node next, Node prev) {
+    public Node(Task data, Node prev, Node next) {
+        this.prev = prev;
         this.data = data;
         this.next = next;
-        this.prev = prev;
+
     }
 
     public Task getData() {
