@@ -13,12 +13,12 @@ import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private int generatorId;
-    private final Map<Integer, Task> tasks;
-    private final Map<Integer, Epic> epics;
-    private final Map<Integer, Subtask> subtasks;
+    protected int generatorId;
+    protected final Map<Integer, Task> tasks;
+    protected final Map<Integer, Epic> epics;
+    protected final Map<Integer, Subtask> subtasks;
 
-    private final HistoryManager history;
+    protected final HistoryManager history;
 
     public InMemoryTaskManager() {
         this.generatorId = 0;
@@ -191,15 +191,15 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Subtask> getEpicSubtasks(int epicId) {
-        List<Subtask> tasks = new ArrayList<>();
+        List<Subtask> resSubtasks = new ArrayList<>();
         Epic epic = epics.get(epicId);
         if (epic == null) {
             return null;
         }
         for (int id : epic.getSubtaskIds()) {
-            tasks.add(subtasks.get(id));
+            resSubtasks.add(subtasks.get(id));
         }
-        return tasks;
+        return resSubtasks;
     }
 
     @Override
@@ -212,7 +212,7 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @param epicId идентификатор эпика
      */
-    private void updateEpicStatus(int epicId) {
+    protected void updateEpicStatus(int epicId) {
         final Epic epic = epics.get(epicId);
         int countNew = 0;
         int countDone = 0;
