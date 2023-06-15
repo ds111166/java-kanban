@@ -2,7 +2,6 @@ package entities;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class Epic extends Task {
@@ -69,7 +68,14 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        return "Epic{" + "id=" + id + ", name=" + name + ", description=" + description + ", status=" + status + ", subtaskIds=" + Arrays.toString(subtaskIds.toArray()) + '}';
+        return id +
+                ";EPIC;\"" +
+                name +
+                "\";" +
+                status +
+                ";\"" +
+                description +
+                "\";";
     }
 
     /**

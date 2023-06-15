@@ -29,16 +29,19 @@ public class Task {
     }
 
     public Task(String strTask) {
-        if(strTask == null){
+        if (strTask == null || strTask.isEmpty()) {
             return;
         }
         final String[] split = strTask.split(";");
+        if (split.length < 5) {
+            return;
+        }
         this.id = Integer.parseInt(split[0]);
         this.name = split[2].replaceAll("\"", "");
         this.status = Status.valueOf(split[3]);
-        this.description =  split[4].replaceAll("\"", "");
+        this.description = split[4].replaceAll("\"", "");
     }
-    
+
     public Status getStatus() {
         return status;
     }
@@ -110,17 +113,14 @@ public class Task {
 
     @Override
     public String toString() {
-        //return "Task{" + "id=" + id + ", name=" + name + ", description=" + description + ", status=" + status + '}';
-        return new StringBuilder().
-                append(id).
-                append(";TASK;\"").
-                append(name).
-                append("\";").
-                append(status).
-                append(";\"").
-                append(description).
-                append("\";").
-                toString();
+        return id +
+                ";TASK;\"" +
+                name +
+                "\";" +
+                status +
+                ";\"" +
+                description +
+                "\";";
     }
 
 }

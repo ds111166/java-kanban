@@ -13,16 +13,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
-    protected String taskStore;
+    protected File taskStore;
 
-    public FileBackedTasksManager() {
-        new FileBackedTasksManager("tasks.store");
-    }
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         /*
         Для этого создайте метод static void main(String[] args) в классе FileBackedTasksManager и реализуйте небольшой сценарий:
         Заведите несколько разных задач, эпиков и подзадач.
@@ -30,19 +27,107 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         Создайте новый FileBackedTasksManager менеджер из этого же файла.
         Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
         */
+        TaskManager taskManager = new FileBackedTasksManager();
+        int numberTasks = 10;
+        List<Integer> taskIds = new ArrayList<>();
+        for (int i = 0; i < numberTasks; i++) {
+            taskIds.add(taskManager.createTask(new Task("Задача " + (i + 1), String.format("Это \"Задача %s\"", i + 1))));
+        }
+        List<Integer> epicIds = new ArrayList<>();
+        for (int i = 0; i < numberTasks; i++) {
+            epicIds.add(taskManager.createEpic(new Epic("Эпик " + (i + 1), String.format("Это \"Эпик %s\"", i + 1))));
+        }
+
+        //получаем новый менеджер задач с хранилищем в том же файле
+        final FileBackedTasksManager fileBackedTasksManager0 = FileBackedTasksManager.
+                loadFromFile(((FileBackedTasksManager) taskManager).getTaskStore());
+
+        System.out.println("\nПросмотр истории просмотров задач из файла1: ");
+        for (Task task : fileBackedTasksManager0.getHistory()) {
+            System.out.println(task);
+        }
+
+        List<Integer> subtaskIds = new ArrayList<>();
+        for (int i = 0, count = 1; i < numberTasks; i++) {
+            final Integer epicId = epicIds.get(i);
+            int number = 1;
+            if (epicId % 2 == 0) {
+                number = 2;
+            } else if (epicId % 3 == 0) {
+                number = 3;
+            }
+            for (; number > 0; number--) {
+                subtaskIds.add(taskManager.createSubtask(new Subtask(epicId, "Подзадача " + count, String.format("Подзадача %s эпика %s", count++, epicId - 10))));
+            }
+        }
+
+
+        for (int i = 0, size = java.lang.Math.min(taskIds.size(), epicIds.size()); i < size; i++) {
+            if (i % 2 == 0) {
+                taskManager.getTask(taskIds.get(i));
+            } else {
+                final Epic epic = taskManager.getEpic(epicIds.get(i));
+                for (final Integer id : epic.getSubtaskIds()) {
+                    taskManager.getSubtask(id);
+                }
+            }
+        }
+        System.out.println("\nПросмотр истории просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
+        //получаем новый менеджер задач с хранилищем в том же файле
+        final FileBackedTasksManager fileBackedTasksManager1 = FileBackedTasksManager.
+                loadFromFile(((FileBackedTasksManager) taskManager).getTaskStore());
+
+        System.out.println("\nПросмотр истории просмотров задач из файла: ");
+        for (Task task : fileBackedTasksManager1.getHistory()) {
+            System.out.println(task);
+        }
+
     }
 
-    public FileBackedTasksManager(String taskStore) {
+    public FileBackedTasksManager() throws IOException {
         super();
-        this.taskStore = System.getProperty("user.dir") + File.separator + taskStore;
+        final Path path = Paths.get(System.getProperty("user.dir") + File.separator + "tasks.store");
+
+        if (Files.exists(path)) {
+            if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
+                this.taskStore = Files.createFile(path).toFile();
+            } else {
+                this.taskStore = path.toFile();
+            }
+        } else {
+            this.taskStore = Files.createFile(path).toFile();
+        }
         loadDataFromFile();
+    }
+
+    public FileBackedTasksManager(File taskStore) throws IOException {
+        super();
+        final Path path = Paths.get(taskStore.getAbsolutePath());
+
+        if (Files.exists(path)) {
+            if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
+                this.taskStore = Files.createFile(path).toFile();
+            } else {
+                this.taskStore = path.toFile();
+            }
+        } else {
+            this.taskStore = Files.createFile(path).toFile();
+        }
+        loadDataFromFile();
+    }
+
+    public File getTaskStore() {
+        return taskStore;
     }
 
     /**
      * Создает экземпляр мененджера и восстанавливает данные менеджера из файла file
      */
-    public static FileBackedTasksManager loadFromFile(File file) {
-        return new FileBackedTasksManager(file.getAbsolutePath());
+    public static FileBackedTasksManager loadFromFile(File file) throws IOException {
+        return new FileBackedTasksManager(file);
     }
 
     /**
@@ -65,11 +150,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      */
     static List<Integer> historyFromString(String value) {
         List<Integer> ids = new ArrayList<>();
-        if (value != null) {
-            final String[] split = value.split(";");
-            for (String str : split) {
-                ids.add(Integer.valueOf(str));
-            }
+        if (value == null || value.isEmpty()) {
+            return ids;
+        }
+        final String[] split = value.split(";");
+        for (String str : split) {
+            ids.add(Integer.parseInt(str));
         }
         return ids;
     }
@@ -191,7 +277,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             }
             final Path tempTaskStore = Files.createTempFile("task_store_", null);
             Files.write(tempTaskStore, contentToWrite, StandardCharsets.UTF_8);
-            Files.move(tempTaskStore, Paths.get(this.taskStore), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tempTaskStore, Paths.get(taskStore.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ManagerSaveException(e);
         }
@@ -202,7 +288,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      */
     protected void loadDataFromFile() {
         try {
-            Path path = Paths.get(this.taskStore);
+            Path path = Paths.get(this.taskStore.getAbsolutePath());
             if (!Files.exists(path)) {
                 return;
             }
@@ -211,7 +297,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             for (int i = 0; i < lines.size(); i++) {
                 final String line = lines.get(i);
                 if (i == 0) {
-                    super.generatorId = Integer.parseInt(line);
+                    if (line == null || line.isEmpty()) {
+                        super.generatorId = 1;
+                    } else {
+                        super.generatorId = Integer.parseInt(line);
+                    }
                     continue;
                 }
                 if (i == 1) {

@@ -18,10 +18,11 @@ public class Subtask extends Task {
 
     public Subtask(String strSubtask) {
         super(strSubtask);
-        if(strSubtask != null) {
+        if (strSubtask != null && !strSubtask.isEmpty()) {
             final String[] split = strSubtask.split(";");
-            if(split.length > 5)
-            this.epicId = Integer.parseInt(split[5]);
+            if (split.length > 5) {
+                this.epicId = Integer.parseInt(split[5]);
+            }
         }
     }
 
@@ -42,6 +43,14 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        return "SubTask{" + "id=" + id + ", name=" + name + ", description=" + description + ", status=" + status + ", epicId=" + epicId + '}';
+        return id +
+                ";SUBTASK;\"" +
+                name +
+                "\";" +
+                status +
+                ";\"" +
+                description +
+                "\";" +
+                epicId;
     }
 }
