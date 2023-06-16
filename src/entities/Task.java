@@ -74,6 +74,10 @@ public class Task {
         this.description = description;
     }
 
+    public TaskType getType() {
+        return TaskType.TASK;
+    }
+
     @Override
     public int hashCode() {
         int hash = 7;
@@ -113,6 +117,16 @@ public class Task {
 
     @Override
     public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                '}';
+    }
+
+
+    public String toString1() {
         return id +
                 ";TASK;\"" +
                 name +

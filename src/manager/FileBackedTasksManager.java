@@ -3,11 +3,11 @@ package manager;
 import entities.Epic;
 import entities.Subtask;
 import entities.Task;
-import history.HistoryManager;
+import manager.history.HistoryManager;
 import manager.exceptions.ManagerSaveException;
+import manager.utilities.CSVTaskFormat;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +17,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
-    protected File taskStore;
+    private final File taskStore;
+
+    public FileBackedTasksManager(File taskStore) {
+        this.taskStore = taskStore;
+    }
 
     public static void main(String[] args) throws IOException {
         /*
@@ -27,7 +31,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         Создайте новый FileBackedTasksManager менеджер из этого же файла.
         Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
         */
-        TaskManager taskManager = new FileBackedTasksManager();
+        final File file = new File(System.getProperty("user.dir") + File.separator + "tasks.store");
+        TaskManager taskManager = new FileBackedTasksManager(file);
         int numberTasks = 10;
         List<Integer> taskIds = new ArrayList<>();
         for (int i = 0; i < numberTasks; i++) {
@@ -40,7 +45,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
         //получаем новый менеджер задач с хранилищем в том же файле
         final FileBackedTasksManager fileBackedTasksManager0 = FileBackedTasksManager.
-                loadFromFile(((FileBackedTasksManager) taskManager).getTaskStore());
+                loadFromFile(file);
 
         System.out.println("\nПросмотр истории просмотров задач из файла1: ");
         for (Task task : fileBackedTasksManager0.getHistory()) {
@@ -78,7 +83,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
         //получаем новый менеджер задач с хранилищем в том же файле
         final FileBackedTasksManager fileBackedTasksManager1 = FileBackedTasksManager.
-                loadFromFile(((FileBackedTasksManager) taskManager).getTaskStore());
+                loadFromFile(file);
 
         System.out.println("\nПросмотр истории просмотров задач из файла: ");
         for (Task task : fileBackedTasksManager1.getHistory()) {
@@ -87,7 +92,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     }
 
-    public FileBackedTasksManager() throws IOException {
+    /*public FileBackedTasksManager() throws IOException {
         super();
         final Path path = Paths.get(System.getProperty("user.dir") + File.separator + "tasks.store");
 
@@ -101,9 +106,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             this.taskStore = Files.createFile(path).toFile();
         }
         loadDataFromFile();
-    }
+    }*/
 
-    public FileBackedTasksManager(File taskStore) throws IOException {
+
+
+   /* public FileBackedTasksManager(File taskStore) throws IOException {
         super();
         final Path path = Paths.get(taskStore.getAbsolutePath());
 
@@ -119,9 +126,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         loadDataFromFile();
     }
 
-    public File getTaskStore() {
+    */
+
+    /*public File getTaskStore() {
         return taskStore;
-    }
+    }*/
 
     /**
      * Создает экземпляр мененджера и восстанавливает данные менеджера из файла file
@@ -260,28 +269,35 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * Записывает текущее состояние менеджера в файл
      */
     protected void save() {
-        try {
-            final List<String> contentToWrite = new ArrayList<>();
-
-            contentToWrite.add(String.valueOf(super.generatorId));
-            contentToWrite.add(historyToString(super.history));
-
-            for (final Task task : super.tasks.values()) {
-                contentToWrite.add(task.toString());
+        try (
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(new FileOutputStream(taskStore), StandardCharsets.UTF_8))
+        ) {
+            writer.write(CSVTaskFormat.getHeader());
+            writer.newLine();
+            for (final Task task : super.tasks.values())  {
+                writer.write(CSVTaskFormat.toString(task));
+                writer.newLine();
             }
             for (final Epic epic : super.epics.values()) {
-                contentToWrite.add(epic.toString());
+                writer.write(CSVTaskFormat.toString(epic));
+                writer.newLine();
             }
             for (final Subtask subtask : super.subtasks.values()) {
-                contentToWrite.add(subtask.toString());
+                writer.write(CSVTaskFormat.toString(subtask));
+                writer.newLine();
             }
-            final Path tempTaskStore = Files.createTempFile("task_store_", null);
-            Files.write(tempTaskStore, contentToWrite, StandardCharsets.UTF_8);
-            Files.move(tempTaskStore, Paths.get(taskStore.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
+            writer.newLine();
+            writer.write(CSVTaskFormat.historyToString(super.history));
+            writer.newLine();
+        } catch (FileNotFoundException e) {
+            throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         } catch (IOException e) {
-            throw new ManagerSaveException(e);
+            throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         }
     }
+
+}
 
     /**
      * Загружает данные из файла
@@ -289,9 +305,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     protected void loadDataFromFile() {
         try {
             Path path = Paths.get(this.taskStore.getAbsolutePath());
-            if (!Files.exists(path)) {
-                return;
-            }
             final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
             final Set<Integer> idsTaskHistory = new HashSet<>();
             for (int i = 0; i < lines.size(); i++) {
@@ -340,9 +353,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 }
             }
         } catch (NumberFormatException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
         }
 
     }

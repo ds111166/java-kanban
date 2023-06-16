@@ -4,7 +4,8 @@ import entities.Epic;
 import entities.Status;
 import entities.Subtask;
 import entities.Task;
-import history.HistoryManager;
+import manager.history.HistoryManager;
+import manager.utilities.Managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -16,6 +16,11 @@ public class Subtask extends Task {
         this.epicId = epicId;
     }
 
+    public Subtask(int id, String name, String description, Status status, int epicId) {
+        super(id, name, description, status);
+        this.epicId = epicId;
+    }
+
     public Subtask(String strSubtask) {
         super(strSubtask);
         if (strSubtask != null && !strSubtask.isEmpty()) {
@@ -35,6 +40,11 @@ public class Subtask extends Task {
     }
 
     @Override
+    public TaskType getType() {
+        return TaskType.SUBTASK;
+    }
+
+    @Override
     public int hashCode() {
         int hash = super.hashCode();
         hash = 97 * hash + this.epicId;
@@ -43,6 +53,16 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
+        return "Subtask{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                ", epicId=" + epicId +
+                '}';
+    }
+
+    public String toString1() {
         return id +
                 ";SUBTASK;\"" +
                 name +
