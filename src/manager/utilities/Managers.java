@@ -1,9 +1,11 @@
 package manager.utilities;
 
-import manager.InMemoryTaskManager;
+import manager.FileBackedTasksManager;
 import manager.TaskManager;
 import manager.history.HistoryManager;
 import manager.history.InMemoryHistoryManager;
+
+import java.io.File;
 
 public class Managers {
     /**
@@ -12,7 +14,7 @@ public class Managers {
      * @return - менеджер задач
      */
     public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+        return new FileBackedTasksManager(new File("resources/task.csv"));
     }
 
     /**

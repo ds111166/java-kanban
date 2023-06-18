@@ -11,3 +11,8 @@ Repository for homework project.
 8. создал в CSVTaskFormat-> static List<Integer> historyFromString(String value) и
 static String historyToString(HistoryManager historyManager)
 9. FileBackedTasksManager -> убрал конструктор без параметров
+##### Сделано по замечаеиям 2:
+1. исправил static FileBackedTasksManager loadFromFile(File taskStore)
+2. исправил в  class Managers -> getDefault() {
+   return new FileBackedTasksManager(new File("resources/task.csv"));
+3. main(String[] args) переместил вниз, чтобы не путать с логикой

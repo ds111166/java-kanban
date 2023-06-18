@@ -1,20 +1,16 @@
 package manager;
 
 import entities.Epic;
+import entities.Status;
 import entities.Subtask;
 import entities.Task;
-import manager.history.HistoryManager;
 import manager.exceptions.ManagerSaveException;
 import manager.utilities.CSVTaskFormat;
+import manager.utilities.Managers;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private final File taskStore;
@@ -23,151 +19,56 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         this.taskStore = taskStore;
     }
 
-    public static void main(String[] args) throws IOException {
-        /*
-        Для этого создайте метод static void main(String[] args) в классе FileBackedTasksManager и реализуйте небольшой сценарий:
-        Заведите несколько разных задач, эпиков и подзадач.
-        Запросите некоторые из них, чтобы заполнилась история просмотра.
-        Создайте новый FileBackedTasksManager менеджер из этого же файла.
-        Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
-        */
-        final File file = new File(System.getProperty("user.dir") + File.separator + "tasks.store");
-        TaskManager taskManager = new FileBackedTasksManager(file);
-        int numberTasks = 10;
-        List<Integer> taskIds = new ArrayList<>();
-        for (int i = 0; i < numberTasks; i++) {
-            taskIds.add(taskManager.createTask(new Task("Задача " + (i + 1), String.format("Это \"Задача %s\"", i + 1))));
-        }
-        List<Integer> epicIds = new ArrayList<>();
-        for (int i = 0; i < numberTasks; i++) {
-            epicIds.add(taskManager.createEpic(new Epic("Эпик " + (i + 1), String.format("Это \"Эпик %s\"", i + 1))));
-        }
+    /**
+     * Создает экземпляр мененджера и восстанавливает данные менеджера из файла taskStore
+     */
+    public static FileBackedTasksManager loadFromFile(File taskStore) {
 
-        //получаем новый менеджер задач с хранилищем в том же файле
-        final FileBackedTasksManager fileBackedTasksManager0 = FileBackedTasksManager.
-                loadFromFile(file);
+        FileBackedTasksManager fileManager = new FileBackedTasksManager(taskStore);
 
-        System.out.println("\nПросмотр истории просмотров задач из файла1: ");
-        for (Task task : fileBackedTasksManager0.getHistory()) {
-            System.out.println(task);
-        }
-
-        List<Integer> subtaskIds = new ArrayList<>();
-        for (int i = 0, count = 1; i < numberTasks; i++) {
-            final Integer epicId = epicIds.get(i);
-            int number = 1;
-            if (epicId % 2 == 0) {
-                number = 2;
-            } else if (epicId % 3 == 0) {
-                number = 3;
-            }
-            for (; number > 0; number--) {
-                subtaskIds.add(taskManager.createSubtask(new Subtask(epicId, "Подзадача " + count, String.format("Подзадача %s эпика %s", count++, epicId - 10))));
-            }
-        }
-
-
-        for (int i = 0, size = java.lang.Math.min(taskIds.size(), epicIds.size()); i < size; i++) {
-            if (i % 2 == 0) {
-                taskManager.getTask(taskIds.get(i));
-            } else {
-                final Epic epic = taskManager.getEpic(epicIds.get(i));
-                for (final Integer id : epic.getSubtaskIds()) {
-                    taskManager.getSubtask(id);
+        try (
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(taskStore), StandardCharsets.UTF_8))) {
+            String line;
+            reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    final Task task = CSVTaskFormat.taskFromString(line);
+                    final int id = task.getId();
+                    if (id > fileManager.generatorId) {
+                        fileManager.generatorId = id;
+                    }
+                    switch (task.getType()) {
+                        case TASK:
+                            fileManager.tasks.put(id, task);
+                            break;
+                        case EPIC:
+                            fileManager.epics.put(id, (Epic) task);
+                            break;
+                        case SUBTASK:
+                            fileManager.subtasks.put(id, (Subtask) task);
+                            break;
+                    }
+                } else {
+                    line = reader.readLine();
+                    for (final Integer id : CSVTaskFormat.historyFromString(line)) {
+                        if (fileManager.tasks.containsKey(id)) {
+                            fileManager.history.add(fileManager.tasks.get(id));
+                        } else if (fileManager.epics.containsKey((id))) {
+                            fileManager.history.add(fileManager.epics.get(id));
+                        } else if (fileManager.subtasks.containsKey(id)) {
+                            fileManager.history.add(fileManager.subtasks.get(id));
+                        }
+                    }
                 }
             }
-        }
-        System.out.println("\nПросмотр истории просмотров задач: ");
-        for (Task task : taskManager.getHistory()) {
-            System.out.println(task);
-        }
-        //получаем новый менеджер задач с хранилищем в том же файле
-        final FileBackedTasksManager fileBackedTasksManager1 = FileBackedTasksManager.
-                loadFromFile(file);
-
-        System.out.println("\nПросмотр истории просмотров задач из файла: ");
-        for (Task task : fileBackedTasksManager1.getHistory()) {
-            System.out.println(task);
+            return fileManager;
+        } catch (IOException e) {
+            throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
         }
 
     }
 
-    /*public FileBackedTasksManager() throws IOException {
-        super();
-        final Path path = Paths.get(System.getProperty("user.dir") + File.separator + "tasks.store");
-
-        if (Files.exists(path)) {
-            if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
-                this.taskStore = Files.createFile(path).toFile();
-            } else {
-                this.taskStore = path.toFile();
-            }
-        } else {
-            this.taskStore = Files.createFile(path).toFile();
-        }
-        loadDataFromFile();
-    }*/
-
-
-
-   /* public FileBackedTasksManager(File taskStore) throws IOException {
-        super();
-        final Path path = Paths.get(taskStore.getAbsolutePath());
-
-        if (Files.exists(path)) {
-            if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
-                this.taskStore = Files.createFile(path).toFile();
-            } else {
-                this.taskStore = path.toFile();
-            }
-        } else {
-            this.taskStore = Files.createFile(path).toFile();
-        }
-        loadDataFromFile();
-    }
-
-    */
-
-    /*public File getTaskStore() {
-        return taskStore;
-    }*/
-
-    /**
-     * Создает экземпляр мененджера и восстанавливает данные менеджера из файла file
-     */
-    public static FileBackedTasksManager loadFromFile(File file) throws IOException {
-        return new FileBackedTasksManager(file);
-    }
-
-    /**
-     * получает из менеджера истории задач строку с идентификаторами задач, разделенными ';'
-     */
-    static String historyToString(HistoryManager history) {
-        if (history == null) {
-            return "";
-        }
-        List<String> ids = new ArrayList<>();
-        for (final Task task : history.getHistory()) {
-            final Integer id = task.getId();
-            ids.add(String.valueOf(id));
-        }
-        return String.join(";", ids);
-    }
-
-    /**
-     * Получает из строки с идентификаторами разделенными ';' список идентификаторов
-     */
-    static List<Integer> historyFromString(String value) {
-        List<Integer> ids = new ArrayList<>();
-        if (value == null || value.isEmpty()) {
-            return ids;
-        }
-        final String[] split = value.split(";");
-        for (String str : split) {
-            ids.add(Integer.parseInt(str));
-        }
-        return ids;
-    }
 
     @Override
     public void deleteTasks() {
@@ -275,7 +176,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         ) {
             writer.write(CSVTaskFormat.getHeader());
             writer.newLine();
-            for (final Task task : super.tasks.values())  {
+            for (final Task task : super.tasks.values()) {
                 writer.write(CSVTaskFormat.toString(task));
                 writer.newLine();
             }
@@ -290,73 +191,60 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             writer.newLine();
             writer.write(CSVTaskFormat.historyToString(super.history));
             writer.newLine();
-        } catch (FileNotFoundException e) {
-            throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         } catch (IOException e) {
             throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         }
     }
 
-}
 
-    /**
-     * Загружает данные из файла
-     */
-    protected void loadDataFromFile() {
-        try {
-            Path path = Paths.get(this.taskStore.getAbsolutePath());
-            final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-            final Set<Integer> idsTaskHistory = new HashSet<>();
-            for (int i = 0; i < lines.size(); i++) {
-                final String line = lines.get(i);
-                if (i == 0) {
-                    if (line == null || line.isEmpty()) {
-                        super.generatorId = 1;
-                    } else {
-                        super.generatorId = Integer.parseInt(line);
-                    }
-                    continue;
-                }
-                if (i == 1) {
-                    idsTaskHistory.addAll(historyFromString(line));
-                    continue;
-                }
+    public static void main(String[] args) {
+        /*
+        Для этого создайте метод static void main(String[] args) в классе FileBackedTasksManager и реализуйте небольшой сценарий:
+        Заведите несколько разных задач, эпиков и подзадач.
+        Запросите некоторые из них, чтобы заполнилась история просмотра.
+        Создайте новый FileBackedTasksManager менеджер из этого же файла.
+        Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
+        */
+        TaskManager taskManager = Managers.getDefault();
+        //создидим три задачи
+        Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
+        Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
+        Integer taskId3 = taskManager.createTask(new Task("Задача 3", "Это \"Задача 3\""));
+        //создидим два эпика
+        Integer epicId1 = taskManager.createEpic(new Epic("Эпик 1", "Это Эпик 1!"));
+        Integer epicId2 = taskManager.createEpic(new Epic("Эпик 2", "Это Эпик 2!"));
+        //для 1-го эпика создаим 2 подзадачи
+        Integer subtaskId1 = taskManager.createSubtask(new Subtask(epicId1, "Подзадача 1", "Подзадача 1 эпика 1"));
+        Integer subtaskId2 = taskManager.createSubtask(new Subtask(epicId1, "Подзадача 2", "Подзадача 2 эпика 1"));
+        //для 2-го эпика создаим одну подзадачу
+        Integer subtaskId3 = taskManager.createSubtask(new Subtask(epicId2, "Подзадача 3", "Подзадача 1 эпика 2"));
+        //Поменяем статусы
+        Task task2 = taskManager.getTask(taskId1);
+        task2.setStatus(Status.DONE);
+        taskManager.updateTask(task2);
 
-                final String[] split = line.split(";");
-                if ("TASK".equals(split[1])) {
-                    Task task = new Task(line);
-                    final Integer id = task.getId();
-                    super.tasks.put(id, task);
-                    if (idsTaskHistory.contains(id)) {
-                        super.history.add(task);
-                    }
-                } else if ("EPIC".equals(split[1])) {
-                    Epic epic = new Epic(line);
-                    final Integer id = epic.getId();
-                    super.epics.put(id, epic);
-                    if (idsTaskHistory.contains(id)) {
-                        super.history.add(epic);
-                    }
-                } else if ("SUBTASK".equals(split[1])) {
-                    Subtask subtask = new Subtask(line);
-                    final int epicId = subtask.getEpicId();
-                    Epic basicEpic = getEpic(epicId);
-                    if (basicEpic != null) {
-                        final Integer id = subtask.getId();
-                        super.subtasks.put(id, subtask);
-                        basicEpic.addSubtaskId(id);
-                        //super.updateEpicStatus(epicId); это не надо
-                        if (idsTaskHistory.contains(id)) {
-                            super.history.add(subtask);
-                        }
-                    }
-                }
-            }
-        } catch (NumberFormatException e) {
-            throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
-        } catch (IOException e) {
-            throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
+        Subtask subtask2 = taskManager.getSubtask(subtaskId2);
+        subtask2.setStatus(Status.DONE);
+        taskManager.updateSubtask(subtask2);
+        //запросим несколько задач
+        taskManager.getTask(taskId1);
+        taskManager.getTask(taskId2);
+        taskManager.getEpic(epicId1);
+        taskManager.getSubtask(subtaskId2);
+        System.out.println("\nПросмотр истории просмотров задач: ");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
         }
 
+
+        //получаем новый менеджер задач с хранилищем в том же файле
+        final FileBackedTasksManager fileManager = FileBackedTasksManager.
+                loadFromFile(new File("./resources/task.csv"));
+
+        System.out.println("\nПросмотр истории просмотров задач из созданного менеджера: ");
+        for (Task task : fileManager.getHistory()) {
+            System.out.println(task);
+        }
     }
+
 }
