@@ -28,7 +28,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
         try (
                 BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(new FileInputStream(taskStore), StandardCharsets.UTF_8))) {
+                        new InputStreamReader(new FileInputStream(taskStore), StandardCharsets.UTF_8))
+        ) {
             String line;
             reader.readLine();
             while ((line = reader.readLine()) != null) {
@@ -61,6 +62,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                         }
                     }
                 }
+            }
+            for (Subtask subtask : fileManager.subtasks.values()) {
+                final Integer idSubtask = subtask.getId();
+                final int epicId = subtask.getEpicId();
+                Epic basicEpic = fileManager.getEpic(epicId);
+                if (basicEpic == null) {
+                    continue;
+                }
+                basicEpic.addSubtaskId(idSubtask);
             }
             return fileManager;
         } catch (IOException e) {
@@ -236,7 +246,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             System.out.println(task);
         }
 
-
         //получаем новый менеджер задач с хранилищем в том же файле
         final FileBackedTasksManager fileManager = FileBackedTasksManager.
                 loadFromFile(new File("./resources/task.csv"));
@@ -245,6 +254,38 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         for (Task task : fileManager.getHistory()) {
             System.out.println(task);
         }
+
+        System.out.println("\nСписок задач, эпиков, подзадач из СТАРОГО менеджера:");
+        System.out.println("Список задач:");
+        for (Task task : taskManager.getTasks()) {
+            System.out.println(task);
+        }
+        System.out.println("Список эпиков:");
+        for (Epic epic : taskManager.getEpics()) {
+            System.out.println(epic);
+        }
+
+        System.out.println("Список подзадач:");
+        for (Subtask subtask : taskManager.getSubtasks()) {
+            System.out.println(subtask);
+        }
+
+        System.out.println("\nСписок задач, эпиков, подзадач из НОВОГО менеджера:");
+        System.out.println("Список задач:");
+        for (Task task : fileManager.getTasks()) {
+            System.out.println(task);
+        }
+        System.out.println("Список эпиков:");
+        for (Epic epic : fileManager.getEpics()) {
+            System.out.println(epic);
+        }
+
+        System.out.println("Список подзадач:");
+        for (Subtask subtask : fileManager.getSubtasks()) {
+            System.out.println(subtask);
+        }
+
+
     }
 
 }
