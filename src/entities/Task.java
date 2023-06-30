@@ -1,5 +1,6 @@
 package entities;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -8,24 +9,38 @@ public class Task {
     protected String name;
     protected String description;
     protected Status status;
+    protected int duration;
+    protected LocalDateTime startTime;
+
+
 
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
-        this.status = Status.NEW;
     }
 
-    public Task(String name, String description, Status status) {
+    public Task(String name, String description, int duration, LocalDateTime startTime) {
+        this.name = name;
+        this.description = description;
+        this.duration = duration;
+        this.startTime = startTime;
+    }
+
+    public Task(String name, String description, Status status, int duration, LocalDateTime startTime) {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
-    public Task(int id, String name, String description, Status status) {
+    public Task(Integer id, String name, String description, Status status, int duration, LocalDateTime startTime) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public Task(String strTask) {
@@ -78,41 +93,46 @@ public class Task {
         return TaskType.TASK;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 47 * hash + Objects.hashCode(this.id);
-        hash = 47 * hash + Objects.hashCode(this.name);
-        hash = 47 * hash + Objects.hashCode(this.description);
-        hash = 47 * hash + Objects.hashCode(this.status);
-        return hash;
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Task other = (Task) obj;
-        if (!this.id.equals(other.id)) {
-            return false;
-        }
-        if (!Objects.equals(this.name, other.name)) {
-            return false;
-        }
-        if (!Objects.equals(this.description, other.description)) {
-            return false;
-        }
-        if (this.status != other.status) {
-            return false;
-        }
-        return true;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Task)) return false;
+
+        Task task = (Task) o;
+
+        if (duration != task.duration) return false;
+        if (!Objects.equals(id, task.id)) return false;
+        if (!Objects.equals(name, task.name)) return false;
+        if (!Objects.equals(description, task.description)) return false;
+        if (status != task.status) return false;
+        return Objects.equals(startTime, task.startTime);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + duration;
+        result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
+        return result;
     }
 
     @Override
@@ -122,19 +142,13 @@ public class Task {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", duration=" + duration +
+                ", startTime=" + startTime +
                 '}';
     }
 
-
-    public String toString1() {
-        return id +
-                ";TASK;\"" +
-                name +
-                "\";" +
-                status +
-                ";\"" +
-                description +
-                "\";";
+    public LocalDateTime getEndTime() {
+        return this.startTime.plusMinutes(this.duration);
     }
 
 }
