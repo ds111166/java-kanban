@@ -151,9 +151,13 @@ public interface TaskManager {
     /**
      * Возвращает историю задач
      *
-     * @return
      */
     List<Task> getHistory();
+
+    /**
+     * Возвращает список задач в порядке возрастания startTime
+     */
+    List<Task> getPrioritizedTasks();
 
 }
 
