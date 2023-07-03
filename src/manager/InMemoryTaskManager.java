@@ -16,7 +16,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Task> tasks;
     protected final HistoryManager history;
     protected final TreeSet<Integer> sortedTaskIds;
-    protected final TreeSet<LocalDateTime> busyTimeUnits;
+    protected final Map<LocalDateTime,Integer> busyTimeUnits;
 
     public InMemoryTaskManager() {
         this.generatorId = 0;
@@ -41,15 +41,7 @@ public class InMemoryTaskManager implements TaskManager {
                 return 0;
             }
         });
-        this.busyTimeUnits = new TreeSet<>((dt1, dt2) -> {
-            if (dt1.isBefore(dt1)) {
-                return 1;
-            } else if (dt1.isAfter(dt2)) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
+        this.busyTimeUnits = new HashMap<>();
     }
 
     @Override
@@ -79,6 +71,7 @@ public class InMemoryTaskManager implements TaskManager {
             tasks.put(id, newTask);
             newTask.setId(id);
             sortedTaskIds.add(id);
+            fillingInterval(newTask);
             return id;
     }
 
@@ -87,11 +80,13 @@ public class InMemoryTaskManager implements TaskManager {
         final int id = updatedTask.getId();
         final Task savedTask = tasks.get(id);
 
-        if (savedTask == null || !isTheTaskTimingValid(savedTask)) {
+        if (savedTask == null || !isTheTaskTimingValid(updatedTask)) {
             return;
         }
         tasks.put(id, updatedTask);
         sortedTaskIds.add(id);
+        clearingInterval(savedTask);
+        fillingInterval(updatedTask);
     }
 
     @Override
@@ -157,6 +152,7 @@ public class InMemoryTaskManager implements TaskManager {
         updateExecutionTimeEpic(epicId);
         sortedTaskIds.add(id);
         sortedTaskIds.add(epicId);
+        fillingInterval(newSubtask);
         return id;
     }
 
@@ -177,6 +173,8 @@ public class InMemoryTaskManager implements TaskManager {
         updateExecutionTimeEpic(epicId);
         sortedTaskIds.add(id);
         sortedTaskIds.add(epicId);
+        clearingInterval(savedSubtask);
+        fillingInterval(updatedSubtask);
     }
 
     @Override
@@ -352,7 +350,15 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    private boolean isTheTaskTimingValid(Task task) {
+    /**
+     *  проверяет валидность задачи по времени начала выполнения и продолжительности
+     *  Если интервал выполнения задачи перескается с интервалами выполнения др задач
+     *  возвращает FALSE и возвращает TRUE в противном случае
+     */
+    protected boolean isTheTaskTimingValid(Task task) {
+        if(task == null){
+            return false;
+        }
         LocalDateTime startTime = task.getStartTime();
         if (startTime == null) {
             return true;
@@ -362,32 +368,71 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getDayOfMonth()
                 , startTime.getHour()
                 , startTime.getMinute());
-
-        if (busyTimeUnits.isEmpty() || busyTimeUnits.last().isBefore(startTime)) {
-            for (int m = 0; m < task.getDuration(); m++) {
-                LocalDateTime ldt = startTime.plusMinutes(m);
-                busyTimeUnits.add(ldt);
-            }
-            LocalDateTime now = LocalDateTime.now();
-            Iterator<LocalDateTime> iterator = busyTimeUnits.iterator();
-            while (iterator.hasNext()) {
-                LocalDateTime ldt = iterator.next();
-                Duration duration = Duration.between(ldt, now);
-                if (duration.toDays() > 365) {
-                    iterator.remove();
-                } else {
-                    break;
-                }
-            }
+        LocalDateTime endTime = startTime.plusMinutes(task.getDuration());
+        if(busyTimeUnits.isEmpty()){
             return true;
-        } else {
-            return false;
+        }
+        final Integer taskId = task.getId();
+        if(!busyTimeUnits.containsKey(startTime) && !busyTimeUnits.containsKey(endTime)){
+                return true;
+        } else if(taskId != null) {
+            final Integer taskIdStartTime = busyTimeUnits.get(startTime);
+            final Integer taskIdEndTime = busyTimeUnits.get(startTime);
+            if(taskId.equals(taskIdStartTime) && taskId.equals(taskIdEndTime)){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Заполнение интервала, сответствующего интервалу времени выполнения задачи
+     */
+    protected void fillingInterval(Task task) {
+        if (task == null) {
+            return;
+        }
+        final Integer taskId = task.getId();
+        if (taskId == null) {
+            return;
+        }
+        LocalDateTime startTime = task.getStartTime();
+        if (startTime == null) {
+            return;
+        }
+        startTime = LocalDateTime.of(startTime.getYear()
+                , startTime.getMonth()
+                , startTime.getDayOfMonth()
+                , startTime.getHour()
+                , startTime.getMinute());
+        final int duration = task.getDuration();
+        for (int m = 0; m < duration; m++) {
+            busyTimeUnits.put(startTime.plusMinutes(m), taskId);
         }
     }
-    protected boolean isIntersection(Task task, LocalDateTime startTime){
-        for (int m = 0; m < task.getDuration(); m++) {
 
-            busyTimeUnits.add(ldt);
+    /**
+     * Очистка интервала, сответствующего интервалу времени выполнения задачи
+     */
+    protected void clearingInterval(Task task){
+        if (task == null) {
+            return;
+        }
+
+        LocalDateTime startTime = task.getStartTime();
+        if (startTime == null) {
+            return;
+        }
+        startTime = LocalDateTime.of(startTime.getYear()
+                , startTime.getMonth()
+                , startTime.getDayOfMonth()
+                , startTime.getHour()
+                , startTime.getMinute());
+        final int duration = task.getDuration();
+        for (int m = 0; m < duration; m++) {
+            busyTimeUnits.remove(startTime.plusMinutes(m));
         }
     }
 
