@@ -43,19 +43,6 @@ public class Task {
         this.startTime = startTime;
     }
 
-    public Task(String strTask) {
-        if (strTask == null || strTask.isEmpty()) {
-            return;
-        }
-        final String[] split = strTask.split(";");
-        if (split.length < 5) {
-            return;
-        }
-        this.id = Integer.parseInt(split[0]);
-        this.name = split[2].replaceAll("\"", "");
-        this.status = Status.valueOf(split[3]);
-        this.description = split[4].replaceAll("\"", "");
-    }
 
     public Status getStatus() {
         return status;

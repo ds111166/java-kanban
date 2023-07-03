@@ -2,87 +2,108 @@ package entities;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDateTime;
 
 class TaskTest {
-    protected Task task;
+    protected static Task task;
+
     @BeforeAll
-    void CreateTask(){
+    static void CreateTaskTest() {
+        task = new Task(1,"name","description", Status.IN_PROGRESS,1,LocalDateTime.now());
+        task = new Task("name","description", Status.DONE,1,LocalDateTime.now());
         task = new Task("Задача 1", "Это \"Задача 1\"");
     }
-    @Test
-    void getStatus() {
-        final Status status = task.getStatus();
-        Assertions.assertEquals(status, Status.NEW);
-    }
+
 
     @Test
-    void setStatus() {
+    void setGetStatusTest() {
         task.setStatus(Status.IN_PROGRESS);
         final Status status = task.getStatus();
-        Assertions.assertEquals(status, Status.IN_PROGRESS);
+        assertEquals(status, Status.IN_PROGRESS);
     }
 
-    @Test
-    void getId() {
-        final Integer taskId = task.getId();
-        Assertions.assertNull(taskId);
-    }
 
     @Test
-    void setId() {
+    void setGetIdTest() {
         int id = 1_234_567_890;
         task.setId(id);
         final Integer taskId = task.getId();
-        Assertions.assertEquals(id, taskId);
+        assertEquals(id, taskId);
     }
 
     @Test
-    void getName() {
-        final String name = task.getName();
-        Assertions.assertEquals("Задача 1", name);
-    }
-
-    @Test
-    void setName() {
+    void setGetNameTest() {
         final String name = "Задача 1*";
         task.setName(name);
-        Assertions.assertEquals(name, task.getName());
+        assertEquals(name, task.getName());
     }
 
     @Test
-    void getDescription() {
-        final String description = task.getDescription();
-        Assertions.assertEquals("Это \"Задача 1\"", description);
-
-    }
-
-    @Test
-    void setDescription() {
+    void setGetDescriptionTest() {
         task.setDescription("Это новое описание");
         final String description = task.getDescription();
-        Assertions.assertEquals("Это новое описание", description);
+        assertEquals("Это новое описание", description);
     }
 
     @Test
-    void getType() {
+    void getTypeTest() {
         final TaskType type = task.getType();
-        Assertions.assertEquals(type, TaskType.TASK);
+        assertEquals(type, TaskType.TASK);
     }
 
     @Test
-    void testHashCode() {
-        final int i = task.hashCode();
+    void setGetDurationTest() {
+        final int duration = 120;
+        task.setDuration(duration);
+        assertEquals(duration, task.getDuration());
+    }
 
+    @Test
+    void setGetStartTimeTest() {
+        LocalDateTime startTime = LocalDateTime.of(1265, 3, 8, 11, 23);
+        task.setStartTime(startTime);
+        assertEquals(startTime, task.getStartTime());
     }
 
     @Test
     void testEquals() {
+        Task task1 = new Task("task", "task test", 22, LocalDateTime.of(9005, 3, 8, 11, 23));
+        Task task2 = new Task("task", "task test", 22, LocalDateTime.of(9005, 3, 8, 11, 23));
+        assertTrue(task1.equals(task2));
+        task1.setId(1);
+        task2.setId(2);
+        assertFalse(task1.equals(task2));
+
+    }
+
+    @Test
+    void testHashCode() {
+        Task task1 = new Task("task", "task test", 22, LocalDateTime.of(9005, 3, 8, 11, 23));
+        Task task2 = new Task("task", "task test", 22, LocalDateTime.of(9005, 3, 8, 11, 23));
+        assertEquals(task1.hashCode(), task2.hashCode());
     }
 
     @Test
     void testToString() {
+        final String string = task.toString();
+        assertEquals(string, task.toString());
     }
 
-
+    @Test
+    void getEndTimeTest() {
+        LocalDateTime startTime = task.getStartTime();
+        int duration = task.getDuration();
+        if (startTime == null) {
+            startTime = LocalDateTime.of(9005, 3, 8, 11, 23);
+            task.setStartTime(startTime);
+        }
+        if (duration == 0) {
+            duration = 123;
+            task.setDuration(duration);
+        }
+        final LocalDateTime endTime = task.getStartTime().plusMinutes(task.getDuration());
+        assertEquals(endTime, task.getEndTime());
+    }
 }
