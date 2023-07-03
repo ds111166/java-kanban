@@ -2,7 +2,7 @@ package manager;
 
 import org.junit.jupiter.api.Test;
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
 
@@ -87,6 +87,26 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
+    void getPrioritizedTasks() {
+    }
+
+    @Test
     void updateEpicStatus() {
+    }
+
+    @Test
+    void updateExecutionTimeEpic() {
+    }
+
+    @Test
+    void isTaskTimingValid() {
+    }
+
+    @Test
+    void fillingInterval() {
+    }
+
+    @Test
+    void clearingInterval() {
     }
 }

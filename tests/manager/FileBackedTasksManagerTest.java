@@ -2,7 +2,7 @@ package manager;
 
 import org.junit.jupiter.api.Test;
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 class FileBackedTasksManagerTest {
 
@@ -72,5 +72,9 @@ class FileBackedTasksManagerTest {
 
     @Test
     void save() {
+    }
+
+    @Test
+    void main() {
     }
 }
