@@ -53,6 +53,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTasks() {
         tasks.clear();
         sortedTaskIds.clear();
+        busyTimeUnits.clear();
     }
 
     @Override
@@ -64,7 +65,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Integer createTask(Task newTask) {
-        if (newTask == null || !isTheTaskTimingValid(newTask) ) {
+        if (newTask == null || !isTaskTimingValid(newTask) ) {
             return null;
         }
             int id = ++generatorId;
@@ -80,7 +81,7 @@ public class InMemoryTaskManager implements TaskManager {
         final int id = updatedTask.getId();
         final Task savedTask = tasks.get(id);
 
-        if (savedTask == null || !isTheTaskTimingValid(updatedTask)) {
+        if (savedTask == null || !isTaskTimingValid(updatedTask)) {
             return;
         }
         tasks.put(id, updatedTask);
@@ -91,9 +92,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTask(int id) {
+        final Task task = tasks.get(id);
+        if(task != null){
+            clearingInterval(task);
+        }
         sortedTaskIds.remove(id);
         tasks.remove(id);
         history.remove(id);
+
     }
 
     @Override
@@ -119,6 +125,7 @@ public class InMemoryTaskManager implements TaskManager {
                     sortedTaskIds.remove(id);
                     break;
                 case SUBTASK:
+                    clearingInterval(task);
                     iterator.remove();
                     sortedTaskIds.remove(id);
                     break;
@@ -135,7 +142,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Integer createSubtask(Subtask newSubtask) {
-        if (newSubtask == null || !isTheTaskTimingValid(newSubtask)) {
+        if (newSubtask == null || !isTaskTimingValid(newSubtask)) {
             return null;
         }
         final int epicId = newSubtask.getEpicId();
@@ -161,7 +168,7 @@ public class InMemoryTaskManager implements TaskManager {
         final int id = updatedSubtask.getId();
         final int epicId = updatedSubtask.getEpicId();
         final Subtask savedSubtask = (Subtask) tasks.get(id);
-        if (savedSubtask == null || !isTheTaskTimingValid(updatedSubtask)) {
+        if (savedSubtask == null || !isTaskTimingValid(updatedSubtask)) {
             return;
         }
         final Epic epic = (Epic) tasks.get(epicId);
@@ -183,6 +190,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask == null) {
             return;
         }
+        clearingInterval(subtask);
         history.remove(id);
         sortedTaskIds.remove(id);
         Epic epic = (Epic) tasks.get(subtask.getEpicId());
@@ -206,7 +214,12 @@ public class InMemoryTaskManager implements TaskManager {
         Iterator<Integer> iterator = tasks.keySet().iterator();
         while (iterator.hasNext()) {
             Integer id = iterator.next();
-            if (tasks.get(id).getType() != TaskType.TASK) {
+            final Task task = tasks.get(id);
+            final TaskType taskType = task.getType();
+            if (taskType != TaskType.TASK) {
+                if(taskType == TaskType.SUBTASK){
+                    clearingInterval(task);
+                }
                 iterator.remove();
                 sortedTaskIds.remove(id);
             }
@@ -248,6 +261,10 @@ public class InMemoryTaskManager implements TaskManager {
         final Epic epic = (Epic) tasks.remove(id);
         history.remove(id);
         for (Integer subtaskId : epic.getSubtaskIds()) {
+            final Task task = tasks.get(subtaskId);
+            if(task != null) {
+                this.clearingInterval(task);
+            }
             tasks.remove(subtaskId);
             history.remove(subtaskId);
             sortedTaskIds.remove(subtaskId);
@@ -276,11 +293,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getPrioritizedTasks() {
-        List<Task> collect = sortedTaskIds
+        return sortedTaskIds
                 .stream()
-                .map(id -> tasks.get(id))
+                .map(tasks::get)
                 .collect(Collectors.toList());
-        return collect;
     }
 
     /**
@@ -355,7 +371,7 @@ public class InMemoryTaskManager implements TaskManager {
      *  Если интервал выполнения задачи перескается с интервалами выполнения др задач
      *  возвращает FALSE и возвращает TRUE в противном случае
      */
-    protected boolean isTheTaskTimingValid(Task task) {
+    protected boolean isTaskTimingValid(Task task) {
         if(task == null){
             return false;
         }
@@ -369,20 +385,13 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getHour()
                 , startTime.getMinute());
         LocalDateTime endTime = startTime.plusMinutes(task.getDuration());
-        if(busyTimeUnits.isEmpty()){
-            return true;
-        }
         final Integer taskId = task.getId();
         if(!busyTimeUnits.containsKey(startTime) && !busyTimeUnits.containsKey(endTime)){
                 return true;
         } else if(taskId != null) {
             final Integer taskIdStartTime = busyTimeUnits.get(startTime);
             final Integer taskIdEndTime = busyTimeUnits.get(startTime);
-            if(taskId.equals(taskIdStartTime) && taskId.equals(taskIdEndTime)){
-                return true;
-            } else {
-                return false;
-            }
+            return taskId.equals(taskIdStartTime) && taskId.equals(taskIdEndTime);
         }
         return false;
     }
