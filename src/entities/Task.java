@@ -43,6 +43,14 @@ public class Task {
         this.startTime = startTime;
     }
 
+    public Task(Task another){
+            this.id = another.id;
+            this.name = another.name;
+            this.description = another.description;
+            this.status = another.status;
+            this.duration = another.duration;
+            this.startTime = another.startTime;
+    }
 
     public Status getStatus() {
         return status;

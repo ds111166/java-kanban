@@ -1,6 +1,6 @@
 package manager.utilities;
 
-import manager.FileBackedTasksManager;
+import manager.InMemoryTaskManager;
 import manager.TaskManager;
 import manager.history.HistoryManager;
 import manager.history.InMemoryHistoryManager;
@@ -14,7 +14,7 @@ public class Managers {
      * @return - менеджер задач
      */
     public static TaskManager getDefault() {
-        return new FileBackedTasksManager(new File("resources/task.csv"));
+        return new InMemoryTaskManager();
     }
 
     /**

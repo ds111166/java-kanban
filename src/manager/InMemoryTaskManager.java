@@ -2,11 +2,12 @@ package manager;
 
 import entities.*;
 import manager.history.HistoryManager;
+import manager.utilities.CSVTaskFormat;
 import manager.utilities.Managers;
 
-import java.time.Duration;
+import static manager.utilities.CSVTaskFormat.cloneTask;
+
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Task> tasks;
     protected final HistoryManager history;
     protected final TreeSet<Integer> sortedTaskIds;
-    protected final Map<LocalDateTime,Integer> busyTimeUnits;
+    protected final Map<LocalDateTime, Integer> busyTimeUnits;
 
     public InMemoryTaskManager() {
         this.generatorId = 0;
@@ -25,6 +26,13 @@ public class InMemoryTaskManager implements TaskManager {
         this.sortedTaskIds = new TreeSet<>((id1, id2) -> {
             Task task1 = tasks.get(id1);
             Task task2 = tasks.get(id2);
+            if (task1 == null && task2 == null) {
+                return 0;
+            } else if (task2 == null) {
+                return 1;
+            } else if (task1 == null) {
+                return -1;
+            }
             LocalDateTime startTime1 = task1.getStartTime();
             LocalDateTime startTime2 = task1.getStartTime();
             if (startTime1 == null && startTime2 == null) {
@@ -46,59 +54,72 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getTasks() {
-        return new ArrayList<>(tasks.values());
+        return tasks.values()
+                .stream()
+                .filter(task -> task.getType() == TaskType.TASK)
+                .map(CSVTaskFormat::cloneTask)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteTasks() {
-        tasks.clear();
-        sortedTaskIds.clear();
-        busyTimeUnits.clear();
+        Iterator<Integer> iterator = tasks.keySet().iterator();
+        while (iterator.hasNext()) {
+            Integer id = iterator.next();
+            Task task = tasks.get(id);
+            if (TaskType.TASK == task.getType()) {
+                clearingInterval(task);
+                iterator.remove();
+                sortedTaskIds.remove(id);
+            }
+        }
     }
 
     @Override
     public Task getTask(int id) {
         final Task task = tasks.get(id);
         history.add(task);
-        return task;
+        return cloneTask(task);
     }
 
     @Override
-    public Integer createTask(Task newTask) {
-        if (newTask == null || !isTaskTimingValid(newTask) ) {
+    public Integer createTask(Task createdTask) {
+        if (createdTask == null || !isTaskTimingValid(createdTask)) {
             return null;
         }
-            int id = ++generatorId;
-            tasks.put(id, newTask);
-            newTask.setId(id);
-            sortedTaskIds.add(id);
-            fillingInterval(newTask);
-            return id;
+        int id = ++generatorId;
+        Task newTask = cloneTask(createdTask);
+        tasks.put(id, newTask);
+        newTask.setId(id);
+        sortedTaskIds.add(id);
+        fillingInterval(newTask);
+        return id;
     }
 
     @Override
-    public void updateTask(Task updatedTask) {
-        final int id = updatedTask.getId();
-        final Task savedTask = tasks.get(id);
+    public void updateTask(Task task) {
+        final int updatedTaskId = task.getId();
+        final Task savedTask = tasks.get(updatedTaskId);
 
-        if (savedTask == null || !isTaskTimingValid(updatedTask)) {
+        if (savedTask == null || !isTaskTimingValid(task)) {
             return;
         }
-        tasks.put(id, updatedTask);
-        sortedTaskIds.add(id);
+        Task updatedTask = cloneTask(task);
+        tasks.put(updatedTaskId, updatedTask);
+        sortedTaskIds.add(updatedTaskId);
         clearingInterval(savedTask);
         fillingInterval(updatedTask);
     }
 
     @Override
-    public void deleteTask(int id) {
-        final Task task = tasks.get(id);
-        if(task != null){
-            clearingInterval(task);
+    public void deleteTask(int deletedTaskId) {
+        final Task deletedTask = tasks.get(deletedTaskId);
+        if (deletedTask != null) {
+            clearingInterval(deletedTask);
         }
-        sortedTaskIds.remove(id);
-        tasks.remove(id);
-        history.remove(id);
+        tasks.remove(deletedTaskId);
+        sortedTaskIds.remove(deletedTaskId);
+        history.remove(deletedTaskId);
 
     }
 
@@ -106,7 +127,7 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Subtask> getSubtasks() {
         return tasks.values()
                 .stream().filter(task -> task.getType() == TaskType.SUBTASK)
-                .map(task -> (Subtask) task)
+                .map(task -> (Subtask) cloneTask(task))
                 .collect(Collectors.toList());
     }
 
@@ -137,21 +158,22 @@ public class InMemoryTaskManager implements TaskManager {
     public Subtask getSubtask(int id) {
         final Subtask subtask = (Subtask) tasks.get(id);
         history.add(subtask);
-        return subtask;
+        return (Subtask) cloneTask(subtask);
     }
 
     @Override
-    public Integer createSubtask(Subtask newSubtask) {
-        if (newSubtask == null || !isTaskTimingValid(newSubtask)) {
+    public Integer createSubtask(Subtask createdSubtask) {
+        if (createdSubtask == null || !isTaskTimingValid(createdSubtask)) {
             return null;
         }
-        final int epicId = newSubtask.getEpicId();
-        Epic basicEpic = getEpic(epicId);
+        final int epicId = createdSubtask.getEpicId();
+        Epic basicEpic = (Epic) tasks.get(epicId);
         if (basicEpic == null) {
             return null;
         }
 
         int id = ++generatorId;
+        Subtask newSubtask = (Subtask) cloneTask(createdSubtask);
         tasks.put(id, newSubtask);
         newSubtask.setId(id);
         basicEpic.addSubtaskId(newSubtask.getId());
@@ -164,21 +186,22 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void updateSubtask(Subtask updatedSubtask) {
-        final int id = updatedSubtask.getId();
-        final int epicId = updatedSubtask.getEpicId();
-        final Subtask savedSubtask = (Subtask) tasks.get(id);
-        if (savedSubtask == null || !isTaskTimingValid(updatedSubtask)) {
+    public void updateSubtask(Subtask subtask) {
+        final int updatedSubtaskId = subtask.getId();
+        final int epicId = subtask.getEpicId();
+        final Subtask savedSubtask = (Subtask) tasks.get(updatedSubtaskId);
+        if (savedSubtask == null || !isTaskTimingValid(subtask)) {
             return;
         }
         final Epic epic = (Epic) tasks.get(epicId);
         if (epic == null) {
             return;
         }
-        tasks.put(id, updatedSubtask);
+        Subtask updatedSubtask = (Subtask) cloneTask(subtask);
+        tasks.put(updatedSubtaskId, updatedSubtask);
         updateEpicStatus(epicId);
         updateExecutionTimeEpic(epicId);
-        sortedTaskIds.add(id);
+        sortedTaskIds.add(updatedSubtaskId);
         sortedTaskIds.add(epicId);
         clearingInterval(savedSubtask);
         fillingInterval(updatedSubtask);
@@ -205,7 +228,7 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Epic> getEpics() {
         return tasks.values()
                 .stream().filter(task -> task.getType() == TaskType.EPIC)
-                .map(task -> (Epic) task)
+                .map(task -> (Epic) cloneTask(task))
                 .collect(Collectors.toList());
     }
 
@@ -217,7 +240,7 @@ public class InMemoryTaskManager implements TaskManager {
             final Task task = tasks.get(id);
             final TaskType taskType = task.getType();
             if (taskType != TaskType.TASK) {
-                if(taskType == TaskType.SUBTASK){
+                if (taskType == TaskType.SUBTASK) {
                     clearingInterval(task);
                 }
                 iterator.remove();
@@ -230,15 +253,16 @@ public class InMemoryTaskManager implements TaskManager {
     public Epic getEpic(int id) {
         final Epic epic = (Epic) tasks.get(id);
         history.add(epic);
-        return epic;
+        return (Epic) cloneTask(epic);
     }
 
     @Override
-    public Integer createEpic(Epic newEpic) {
-        if (newEpic == null) {
+    public Integer createEpic(Epic createdEpic) {
+        if (createdEpic == null) {
             return null;
         }
         int id = ++generatorId;
+        Epic newEpic = (Epic) cloneTask(createdEpic);
         newEpic.setId(id);
         tasks.put(id, newEpic);
         sortedTaskIds.add(id);
@@ -247,13 +271,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateEpic(Epic epic) {
-        if (epic != null) {
-            Integer epicId = epic.getId();
-            final Epic savedEpic = (Epic) tasks.get(epicId);
-            savedEpic.setName(epic.getName());
-            savedEpic.setDescription(epic.getDescription());
-            sortedTaskIds.add(epicId);
+        if (epic == null) {
+            return;
         }
+        final Integer updatedEpicId = epic.getId();
+        final Epic savedEpic = (Epic) tasks.get(updatedEpicId);
+        if (savedEpic == null) {
+            return;
+        }
+        Epic updatedEpic = (Epic) cloneTask(epic);
+        tasks.put(updatedEpicId, updatedEpic);
+        updateEpicStatus(updatedEpicId);
+        sortedTaskIds.add(updatedEpicId);
     }
 
     @Override
@@ -262,13 +291,14 @@ public class InMemoryTaskManager implements TaskManager {
         history.remove(id);
         for (Integer subtaskId : epic.getSubtaskIds()) {
             final Task task = tasks.get(subtaskId);
-            if(task != null) {
+            if (task != null) {
                 this.clearingInterval(task);
             }
             tasks.remove(subtaskId);
             history.remove(subtaskId);
             sortedTaskIds.remove(subtaskId);
         }
+
         sortedTaskIds.remove(id);
     }
 
@@ -280,7 +310,7 @@ public class InMemoryTaskManager implements TaskManager {
             return null;
         }
         for (int id : epic.getSubtaskIds()) {
-            resSubtasks.add((Subtask) tasks.get(id));
+            resSubtasks.add((Subtask) cloneTask(tasks.get(id)));
         }
         return resSubtasks;
     }
@@ -293,9 +323,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getPrioritizedTasks() {
+
         return sortedTaskIds
                 .stream()
-                .map(tasks::get)
+                .map(id -> cloneTask(tasks.get(id)))
                 .collect(Collectors.toList());
     }
 
@@ -335,7 +366,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Расчет времени начала, конца и прдолжительность выполненя эпика
      * в соответствии с показателями подзадач
      */
-    protected void updateExecutionTimeEpic(int epicId){
+    protected void updateExecutionTimeEpic(int epicId) {
         final Epic epic = (Epic) tasks.get(epicId);
         int duration = 0;
         LocalDateTime endTime = null;
@@ -344,7 +375,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtaskIds != null) {
             for (Integer id : subtaskIds) {
                 final Subtask subtask = (Subtask) tasks.get(id);
-                if(subtask == null){
+                if (subtask == null) {
                     continue;
                 }
                 final int durationSubtask = subtask.getDuration();
@@ -367,12 +398,12 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     /**
-     *  проверяет валидность задачи по времени начала выполнения и продолжительности
-     *  Если интервал выполнения задачи перескается с интервалами выполнения др задач
-     *  возвращает FALSE и возвращает TRUE в противном случае
+     * проверяет валидность задачи по времени начала выполнения и продолжительности
+     * Если интервал выполнения задачи перескается с интервалами выполнения др задач
+     * возвращает FALSE и возвращает TRUE в противном случае
      */
     protected boolean isTaskTimingValid(Task task) {
-        if(task == null){
+        if (task == null) {
             return false;
         }
         LocalDateTime startTime = task.getStartTime();
@@ -386,9 +417,9 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getMinute());
         LocalDateTime endTime = startTime.plusMinutes(task.getDuration());
         final Integer taskId = task.getId();
-        if(!busyTimeUnits.containsKey(startTime) && !busyTimeUnits.containsKey(endTime)){
-                return true;
-        } else if(taskId != null) {
+        if (!busyTimeUnits.containsKey(startTime) && !busyTimeUnits.containsKey(endTime)) {
+            return true;
+        } else if (taskId != null) {
             final Integer taskIdStartTime = busyTimeUnits.get(startTime);
             final Integer taskIdEndTime = busyTimeUnits.get(startTime);
             return taskId.equals(taskIdStartTime) && taskId.equals(taskIdEndTime);
@@ -417,7 +448,7 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getHour()
                 , startTime.getMinute());
         final int duration = task.getDuration();
-        for (int m = 0; m < duration; m++) {
+        for (int m = 0; m < duration + 1; m++) {
             busyTimeUnits.put(startTime.plusMinutes(m), taskId);
         }
     }
@@ -425,7 +456,7 @@ public class InMemoryTaskManager implements TaskManager {
     /**
      * Очистка интервала, сответствующего интервалу времени выполнения задачи
      */
-    protected void clearingInterval(Task task){
+    protected void clearingInterval(Task task) {
         if (task == null) {
             return;
         }
@@ -440,9 +471,10 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getHour()
                 , startTime.getMinute());
         final int duration = task.getDuration();
-        for (int m = 0; m < duration; m++) {
+        for (int m = 0; m < duration + 1; m++) {
             busyTimeUnits.remove(startTime.plusMinutes(m));
         }
     }
+
 
 }

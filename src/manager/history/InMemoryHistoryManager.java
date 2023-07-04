@@ -4,6 +4,8 @@ import entities.Task;
 
 import java.util.*;
 
+import static manager.utilities.CSVTaskFormat.cloneTask;
+
 public class InMemoryHistoryManager implements HistoryManager {
     private Node first;
     private Node last;
@@ -86,7 +88,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         while (nextNode != null) {
             final Task task = nextNode.getData();
             if (task != null) {
-                tasks.add(task);
+                tasks.add(cloneTask(task));
             }
             nextNode = nextNode.getNext();
         }

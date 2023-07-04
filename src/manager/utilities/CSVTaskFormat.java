@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class CSVTaskFormat {
+    private CSVTaskFormat() {
+    }
+
     /**
      * преобразует задачу в строку
      */
@@ -95,5 +98,19 @@ public class CSVTaskFormat {
 
     public static String getHeader() {
         return "id,type,name,status,description,duration,startTime,endTime,epic";
+    }
+
+    public static Task cloneTask(Task task){
+        if(task == null){
+            return null;
+        }
+        final TaskType type = task.getType();
+        switch(type){
+            case TASK: return new Task(task);
+            case SUBTASK: return new Subtask(((Subtask)task));
+            case EPIC:
+                return new Epic(((Epic)task));
+            default: return null;
+        }
     }
 }
