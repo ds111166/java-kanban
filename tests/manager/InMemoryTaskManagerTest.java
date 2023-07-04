@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -235,7 +236,7 @@ class InMemoryTaskManagerTest {
         assertAll(
                 ()->assertNull(status),
                 ()->assertEquals(id, id1),
-                ()->assertEquals(subtask1, Status.IN_PROGRESS)
+                ()->assertEquals(status1, Status.IN_PROGRESS)
         );
     }
 
@@ -409,10 +410,21 @@ class InMemoryTaskManagerTest {
 
     @Test
     void getPrioritizedTasksTest() {
-        final List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        List<Integer> prioritizedTasksIds = taskManager.getPrioritizedTasks().stream().map(Task::getId).collect(Collectors.toList());
+        String stringIds = Arrays.toString(prioritizedTasksIds.toArray(new Integer[0]));
         taskManager.deleteTask(taskId1);
-        final List<Task> prioritizedTasks1 = taskManager.getPrioritizedTasks();
-        ass
+        taskManager.deleteTask(taskId3);
+        taskManager.getPrioritizedTasks();
+        List<Integer> prioritizedTasksIds1 = taskManager.getPrioritizedTasks().stream().map(Task::getId).collect(Collectors.toList());
+        String stringIds1 = Arrays.toString(prioritizedTasksIds1.toArray(new Integer[0]));
+        String str = "[1, 2, 3, 4, 7, 8, 5, 9, 10, 11, 6, 12]";
+        String str1 = "[2, 4, 7, 8, 5, 9, 10, 11, 6, 12]";
+        assertAll(
+                ()->assertEquals(stringIds, str),
+                ()->assertEquals(stringIds1, str1)
+        );
+
     }
 
     @Test
