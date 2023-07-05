@@ -5,8 +5,6 @@ import manager.TaskManager;
 import manager.history.HistoryManager;
 import manager.history.InMemoryHistoryManager;
 
-import java.io.File;
-
 public class Managers {
     /**
      * Возвращает менеджер задач активный по умолчанию

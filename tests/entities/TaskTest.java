@@ -1,18 +1,19 @@
 package entities;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TaskTest {
     protected static Task task;
 
     @BeforeAll
     static void CreateTaskTest() {
-        task = new Task(1,"name","description", Status.IN_PROGRESS,1,LocalDateTime.now());
-        task = new Task("name","description", Status.DONE,1,LocalDateTime.now());
+        task = new Task(1, "name", "description", Status.IN_PROGRESS, 1, LocalDateTime.now());
+        task = new Task("name", "description", Status.DONE, 1, LocalDateTime.now());
         task = new Task("Задача 1", "Это \"Задача 1\"");
     }
 

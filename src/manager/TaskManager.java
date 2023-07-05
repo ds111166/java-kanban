@@ -150,7 +150,6 @@ public interface TaskManager {
 
     /**
      * Возвращает историю задач
-     *
      */
     List<Task> getHistory();
 

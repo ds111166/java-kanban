@@ -1,7 +1,5 @@
 package entities;
 
-import manager.TaskManager;
-import manager.utilities.Managers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -15,12 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class EpicTest {
 
     protected static Epic epic;
+
     @BeforeAll
     static void CreateEpicTest() {
         Epic epic1 = new Epic("epic1", "epic1");
-        epic = new Epic(1234,"name1234","description 1234", Status.DONE,0,null);
+        epic = new Epic(1234, "name1234", "description 1234", Status.DONE, 0, null);
 
     }
+
     @Test
     void getTypeTest() {
         final TaskType type = epic.getType();
@@ -45,10 +45,10 @@ class EpicTest {
 
     @Test
     void testEquals() {
-        Epic epic1 = new Epic(1234,"name1234",
-                "description 1234", Status.DONE,0,null);
-        Epic epic2 = new Epic(1234,"name1234",
-                "description 1234", Status.DONE,0,null);
+        Epic epic1 = new Epic(1234, "name1234",
+                "description 1234", Status.DONE, 0, null);
+        Epic epic2 = new Epic(1234, "name1234",
+                "description 1234", Status.DONE, 0, null);
         assertEquals(epic1, epic2);
         epic2.addSubtaskId(1);
         assertNotEquals(epic1, epic2);
@@ -56,10 +56,10 @@ class EpicTest {
 
     @Test
     void testHashCode() {
-        Epic epic1 = new Epic(1234,"name1234",
-                "description 1234", Status.DONE,0,null);
-        Epic epic2 = new Epic(1234,"name1234",
-                "description 1234", Status.DONE,0,null);
+        Epic epic1 = new Epic(1234, "name1234",
+                "description 1234", Status.DONE, 0, null);
+        Epic epic2 = new Epic(1234, "name1234",
+                "description 1234", Status.DONE, 0, null);
         assertEquals(epic1.hashCode(), epic2.hashCode());
         epic2.addSubtaskId(1);
         assertNotEquals(epic1.hashCode(), epic2.hashCode());

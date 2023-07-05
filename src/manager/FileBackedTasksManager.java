@@ -1,9 +1,11 @@
 package manager;
 
-import entities.*;
+import entities.Epic;
+import entities.Subtask;
+import entities.Task;
+import entities.TaskType;
 import manager.exceptions.ManagerSaveException;
 import manager.utilities.CSVTaskFormat;
-import manager.utilities.Managers;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +34,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             String line;
             reader.readLine();
             Set<Integer> idsSubtatsk = new HashSet<>();
+            Set<Integer> idsEpic = new HashSet<>();
             while ((line = reader.readLine()) != null) {
                 if (!line.isEmpty()) {
                     final Task task = CSVTaskFormat.taskFromString(line);
@@ -40,12 +43,14 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                         fileManager.generatorId = id;
                     }
                     fileManager.tasks.put(id, task);
-                    fileManager.sortedTaskIds.add(id);
+
                     final TaskType taskType = task.getType();
-                    if(taskType != TaskType.EPIC) {
+                    if (taskType != TaskType.EPIC) {
                         fileManager.fillingInterval(task);
+                    } else {
+                        idsEpic.add(id);
                     }
-                    if(taskType == TaskType.SUBTASK){
+                    if (taskType == TaskType.SUBTASK) {
                         idsSubtatsk.add(task.getId());
                     }
                 } else {
@@ -66,6 +71,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 }
                 basicEpic.addSubtaskId(idSubtask);
             }
+            idsEpic.forEach(id -> {
+                fileManager.updateEpicStatus(id);
+                fileManager.updateExecutionTimeEpic(id);
+            });
+            fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.sortedTaskIds::add);
+
             return fileManager;
         } catch (IOException e) {
             throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
@@ -202,7 +213,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         Создайте новый FileBackedTasksManager менеджер из этого же файла.
         Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
         */
-        TaskManager taskManager = Managers.getDefault();
+        /*TaskManager taskManager = Managers.getDefault();
         //создидим три задачи
         Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
         Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
@@ -271,7 +282,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         for (Subtask subtask : fileManager.getSubtasks()) {
             System.out.println(subtask);
         }
-
+    */
 
     }
 

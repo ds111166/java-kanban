@@ -5,11 +5,11 @@ import manager.history.HistoryManager;
 import manager.utilities.CSVTaskFormat;
 import manager.utilities.Managers;
 
-import static manager.utilities.CSVTaskFormat.cloneTask;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static manager.utilities.CSVTaskFormat.cloneTask;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -210,7 +210,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteSubtask(int id) {
-        if(!tasks.containsKey(id)){
+        if (!tasks.containsKey(id)) {
             return;
         }
         sortedTaskIds.remove(id);
@@ -262,12 +262,13 @@ public class InMemoryTaskManager implements TaskManager {
         if (createdEpic == null) {
             return null;
         }
-        int id = ++generatorId;
+        int epicId = ++generatorId;
         Epic newEpic = (Epic) cloneTask(createdEpic);
-        newEpic.setId(id);
-        tasks.put(id, newEpic);
-        sortedTaskIds.add(id);
-        return id;
+        newEpic.setId(epicId);
+        tasks.put(epicId, newEpic);
+        updateEpicStatus(epicId);
+        sortedTaskIds.add(epicId);
+        return epicId;
     }
 
     @Override
@@ -288,7 +289,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteEpic(int id) {
-        if(!tasks.containsKey(id)){
+        if (!tasks.containsKey(id)) {
             return;
         }
         sortedTaskIds.remove(id);

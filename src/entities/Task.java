@@ -13,7 +13,6 @@ public class Task {
     protected LocalDateTime startTime;
 
 
-
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
@@ -23,7 +22,7 @@ public class Task {
         this.name = name;
         this.description = description;
         this.duration = duration;
-        this.startTime = startTime;
+        this.startTime = samplingMomentTime(startTime);
     }
 
     public Task(String name, String description, Status status, int duration, LocalDateTime startTime) {
@@ -31,7 +30,7 @@ public class Task {
         this.description = description;
         this.status = status;
         this.duration = duration;
-        this.startTime = startTime;
+        this.startTime = samplingMomentTime(startTime);
     }
 
     public Task(Integer id, String name, String description, Status status, int duration, LocalDateTime startTime) {
@@ -40,16 +39,16 @@ public class Task {
         this.description = description;
         this.status = status;
         this.duration = duration;
-        this.startTime = startTime;
+        this.startTime = samplingMomentTime(startTime);
     }
 
-    public Task(Task another){
-            this.id = another.id;
-            this.name = another.name;
-            this.description = another.description;
-            this.status = another.status;
-            this.duration = another.duration;
-            this.startTime = another.startTime;
+    public Task(Task another) {
+        this.id = another.id;
+        this.name = another.name;
+        this.description = another.description;
+        this.status = another.status;
+        this.duration = another.duration;
+        this.startTime = samplingMomentTime(another.startTime);
     }
 
     public Status getStatus() {
@@ -144,6 +143,17 @@ public class Task {
 
     public LocalDateTime getEndTime() {
         return this.startTime.plusMinutes(this.duration);
+    }
+
+    protected LocalDateTime samplingMomentTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return LocalDateTime.of(dateTime.getYear()
+                , dateTime.getMonth()
+                , dateTime.getDayOfMonth()
+                , dateTime.getHour()
+                , dateTime.getMinute());
     }
 
 }

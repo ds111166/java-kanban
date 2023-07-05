@@ -13,12 +13,13 @@ class SubtaskTest {
 
     @BeforeAll
     static void CreateSubaskTest() {
-        Subtask subtask1 = new Subtask(2,"Под Задача 1", "Это \"Под Задача 1 эпика ID=2\"");
-        Subtask subtask2 = new Subtask(1,"name","description", 1, LocalDateTime.now());
-        subtask = new Subtask(333,3,"name333","description", Status.DONE,1,
+        Subtask subtask1 = new Subtask(2, "Под Задача 1", "Это \"Под Задача 1 эпика ID=2\"");
+        Subtask subtask2 = new Subtask(1, "name", "description", 1, LocalDateTime.now());
+        subtask = new Subtask(333, 3, "name333", "description", Status.DONE, 1,
                 LocalDateTime.of(9005, 3, 8, 11, 23));
 
     }
+
     @Test
     void setGetEpicId() {
         int epicId = subtask.getEpicId();
@@ -36,9 +37,9 @@ class SubtaskTest {
 
     @Test
     void testEquals() {
-        Subtask subtask1 = new Subtask(333,3,"name333","description", Status.DONE,1,
+        Subtask subtask1 = new Subtask(333, 3, "name333", "description", Status.DONE, 1,
                 LocalDateTime.of(9005, 3, 8, 11, 23));
-        Subtask subtask2 = new Subtask(333,3,"name333","description", Status.DONE,1,
+        Subtask subtask2 = new Subtask(333, 3, "name333", "description", Status.DONE, 1,
                 LocalDateTime.of(9005, 3, 8, 11, 23));
         assertTrue(subtask1.equals(subtask2));
         subtask1.setId(1);
@@ -49,9 +50,9 @@ class SubtaskTest {
 
     @Test
     void testHashCode() {
-        Subtask subtask1 = new Subtask(333,3,"name333","description", Status.DONE,1,
+        Subtask subtask1 = new Subtask(333, 3, "name333", "description", Status.DONE, 1,
                 LocalDateTime.of(9005, 3, 8, 11, 23));
-        Subtask subtask2 = new Subtask(333,3,"name333","description", Status.DONE,1,
+        Subtask subtask2 = new Subtask(333, 3, "name333", "description", Status.DONE, 1,
                 LocalDateTime.of(9005, 3, 8, 11, 23));
         assertEquals(subtask1.hashCode(), subtask2.hashCode());
     }
