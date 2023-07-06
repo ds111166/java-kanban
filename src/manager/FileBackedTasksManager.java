@@ -72,8 +72,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 basicEpic.addSubtaskId(idSubtask);
             }
             idsEpic.forEach(id -> {
-                fileManager.updateEpicStatus(id);
-                fileManager.updateExecutionTimeEpic(id);
+                fileManager.updateEpic(id);
+                //fileManager.updateEpicStatus(id);
+                //fileManager.updateExecutionTimeEpic(id);
             });
             fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.prioritizedTasks::add);
 

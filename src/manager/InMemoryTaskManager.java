@@ -117,8 +117,7 @@ public class InMemoryTaskManager implements TaskManager {
                 case EPIC:
                     Epic epic = (Epic) task;
                     epic.cleanSubtaskIds();
-                    updateEpicStatus(id);
-                    updateExecutionTimeEpic(id);
+                    updateEpic(id);
                     prioritizedTasks.add(id);
                     break;
                 case SUBTASK:
@@ -153,8 +152,7 @@ public class InMemoryTaskManager implements TaskManager {
         tasks.put(id, newSubtask);
         newSubtask.setId(id);
         basicEpic.addSubtaskId(newSubtask.getId());
-        updateEpicStatus(epicId);
-        updateExecutionTimeEpic(epicId);
+        updateEpic(epicId);
         prioritizedTasks.add(id);
         prioritizedTasks.add(epicId);
         fillingInterval(newSubtask);
@@ -175,8 +173,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         Subtask updatedSubtask = (Subtask) cloneTask(subtask);
         tasks.put(updatedSubtaskId, updatedSubtask);
-        updateEpicStatus(epicId);
-        updateExecutionTimeEpic(epicId);
+        updateEpic(epicId);
         prioritizedTasks.add(updatedSubtaskId);
         prioritizedTasks.add(epicId);
         clearingInterval(savedSubtask);
@@ -195,8 +192,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = (Epic) tasks.get(subtask.getEpicId());
         epic.removeSubtask(id);
         Integer epicId = epic.getId();
-        updateEpicStatus(epicId);
-        updateExecutionTimeEpic(epicId);
+        updateEpic(epicId);
         prioritizedTasks.add(epicId);
     }
 
@@ -241,7 +237,8 @@ public class InMemoryTaskManager implements TaskManager {
         Epic newEpic = (Epic) cloneTask(createdEpic);
         newEpic.setId(epicId);
         tasks.put(epicId, newEpic);
-        updateEpicStatus(epicId);
+        updateEpic(epicId);
+        //updateEpicStatus(epicId);
         prioritizedTasks.add(epicId);
         return epicId;
     }
@@ -258,7 +255,8 @@ public class InMemoryTaskManager implements TaskManager {
         }
         Epic updatedEpic = (Epic) cloneTask(epic);
         tasks.put(updatedEpicId, updatedEpic);
-        updateEpicStatus(updatedEpicId);
+        updateEpic(updatedEpicId);
+        //updateEpicStatus(updatedEpicId);
         prioritizedTasks.add(updatedEpicId);
     }
 
@@ -312,10 +310,9 @@ public class InMemoryTaskManager implements TaskManager {
     /**
      * Устанавливает статус эпика в соответствии расчитанным по статусам подзадач эпика
      *
-     * @param epicId идентификатор эпика
      */
-    protected void updateEpicStatus(int epicId) {
-        final Epic epic = (Epic) tasks.get(epicId);
+    protected void updateEpicStatus(Epic epic) {
+        //final Epic epic = (Epic) tasks.get(epicId);
         int countNew = 0;
         int countDone = 0;
         int count = 0;
@@ -345,8 +342,8 @@ public class InMemoryTaskManager implements TaskManager {
      * Расчет времени начала, конца и прдолжительность выполненя эпика
      * в соответствии с показателями подзадач
      */
-    protected void updateExecutionTimeEpic(int epicId) {
-        final Epic epic = (Epic) tasks.get(epicId);
+    protected void updateExecutionTimeEpic(Epic epic) {
+        //final Epic epic = (Epic) tasks.get(epicId);
         int duration = 0;
         LocalDateTime endTime = null;
         LocalDateTime startTime = null;
@@ -374,6 +371,12 @@ public class InMemoryTaskManager implements TaskManager {
             epic.setStartTime(startTime);
             epic.setEndTime(endTime);
         }
+    }
+
+    protected void updateEpic(int epicId) {
+        final Epic epic = (Epic) tasks.get(epicId);
+        updateEpicStatus(epic);
+        updateExecutionTimeEpic(epic);
     }
 
     /**
