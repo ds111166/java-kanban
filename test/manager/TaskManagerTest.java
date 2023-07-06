@@ -4,13 +4,11 @@ import entities.Epic;
 import entities.Status;
 import entities.Subtask;
 import entities.Task;
-import manager.exceptions.ManagerSaveException;
 import manager.exceptions.TaskValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +34,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
-        assertTrue(ids.containsAll(Set.of(taskId1, taskId2, taskId3)));
+        assertTrue(ids.containsAll(Set.of(taskId1, taskId2, taskId3)), "Получен не верный список задач");
     }
 
     @Test
@@ -45,27 +43,23 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
+        assertEquals(ids.isEmpty(), false, "Получен пустой список идентификаторов задач в списке");
         taskManager.deleteTasks();
         final Set<Integer> ids1 = taskManager.getTasks()
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
-        assertAll(
-                () -> assertFalse(ids.isEmpty()),
-                () -> assertTrue(ids1.isEmpty())
-        );
+        assertEquals(ids1.isEmpty(), true, "Получен не пустой список идентификаторов задач в списке");
     }
 
 
     @Test
     void getTaskTest() {
-        final Task task = taskManager.getTask(656565);
+        final Task task = taskManager.getTask(-656565);
+        assertNull(task, "Получена на пустая задача по не верному идентификатору");
         final Task task2 = taskManager.getTask(taskId2);
-        assertAll(
-                () -> assertNull(task),
-                () -> assertNotNull(task2),
-                () -> assertEquals("task2", task2.getName())
-        );
+        assertNotNull(task2,"Получена пустая задача по верному идентификатору");
+        assertEquals("task2", task2.getName(), "Имя задачи полученной по верному идентификатору не ВЕРНО!");
     }
 
     @Test
@@ -83,8 +77,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                     final Integer taskIdexception = taskManager.createTask(
                             new Task("createTaskTest1", "this create Task Test1", 11, startTime));
                 });
-        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception1.getMessage(),
-                "неверное сообщение исклчения");
+        assertEquals("Задача пересекается с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception1.getMessage(),
+                "неверное сообщение исклчюния");
 
         final Task task = taskManager.getTask(taskId);
 
@@ -96,23 +90,33 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                     final Integer taskIdexception = taskManager.createTask(
                             new Task("createTaskTest2", "this create Task Test2", 11, startTime1));
                 });
-        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception2.getMessage(),
-                "неверное сообщение исклчения");
+        assertEquals("Задача пересекается с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception2.getMessage(),
+                "неверное сообщение исклчюния");
 
         LocalDateTime startTime2 = startTime.plusMinutes(11);
         final TaskValidationException exception3 = assertThrows(
                 TaskValidationException.class,
                 () -> {
-                    final Integer taskId3 = taskManager.createTask(
+                    final Integer taskIdexception = taskManager.createTask(
                             new Task("createTaskTest2", "this create Task Test2", 11, startTime2));
                 });
-        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception3.getMessage(),
-                "неверное сообщение исклчения");
+        assertEquals("Задача пересекается с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception3.getMessage(),
+                "неверное сообщение исклчюния");
 
-        LocalDateTime startTime3 = startTime.plusMinutes(12);
+        LocalDateTime startTime4 = startTime.plusMinutes(32);
         final Integer taskId4 = taskManager.createTask(
-                new Task("createTaskTest2", "this create Task Test2", 11, startTime3));
+                new Task("createTaskTest4", "this create Task Test4", 11, startTime4));
         assertNotNull(taskId4, "при создании задачи получен пустой идентификатор");
+
+        LocalDateTime startTime3 = startTime.plusMinutes(28);
+        final TaskValidationException exception4 = assertThrows(
+                TaskValidationException.class,
+                () -> {
+                    final Integer taskIdexception = taskManager.createTask(
+                            new Task("createTaskTest2", "this create Task Test2", 11, startTime3));
+                });
+        assertEquals("Задача пересекается с id=14 c 2001-10-02T20:54 по 2001-10-02T21:05", exception4.getMessage(),
+                "неверное сообщение исклчюния");
 
     }
 
@@ -121,6 +125,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         final Task task = taskManager.getTask(taskId1);
         final Status status = task.getStatus();
         assertNull(status, "получен не пустой статус");
+
         task.setStatus(Status.DONE);
         taskManager.updateTask(task);
         final Task task1 = taskManager.getTask(taskId1);
@@ -131,12 +136,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void deleteTaskTest() {
         final Task task = taskManager.getTask(taskId1);
+        assertNotNull(task,"Полученв пустая задача по верному идентификатору");
         taskManager.deleteTask(taskId1);
         final Task task2 = taskManager.getTask(taskId1);
-        assertAll(
-                () -> assertNull(task2),
-                () -> assertNotNull(task)
-        );
+        assertNull(task2, "По идентификатору удаленной задачи получена НЕ ПУСТАЯ задача");
     }
 
     @Test
@@ -145,7 +148,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
-        assertTrue(ids.containsAll(Set.of(subId11, subId12, subId21, subId22, subId23, subId31)));
+        assertTrue(ids.containsAll(Set.of(subId11, subId12, subId21, subId22, subId23, subId31)),
+                "Получен не верный список подзадач");
     }
 
     @Test
@@ -154,48 +158,43 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
+        assertFalse(ids.isEmpty(),"Получен пустой список подзадач, что не верно");
         taskManager.deleteSubtasks();
         final Set<Integer> ids1 = taskManager.getSubtasks()
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
-        assertAll(
-                () -> assertFalse(ids.isEmpty()),
-                () -> assertTrue(ids1.isEmpty())
-        );
+        assertTrue(ids1.isEmpty(),"После удаления всех подзач, получен НЕ ПУСТОЙ списк подзадач");
     }
 
 
     @Test
     void getSubtaskTest() {
-        final Subtask subtask = taskManager.getSubtask(6568865);
+        final Subtask subtask = taskManager.getSubtask(-6568865);
+        assertNull(subtask, "Получена не пустая подзадача по заведомо не верному идентификатору!");
         final Subtask subtask2 = taskManager.getSubtask(subId22);
-        assertAll(
-                () -> assertNull(subtask),
-                () -> assertNotNull(subtask2),
-                () -> assertEquals("sud22", subtask2.getName())
-        );
+        assertNotNull(subtask2, "Получена пустая подзадача по заведомо верному идентификатору");
+        assertEquals("sud22", subtask2.getName(), "Имя подзадачи полученной по верному идентификатору не ВЕРНО!");
     }
 
     @Test
     void createSubtaskTest() {
         final Integer subtaskNullId = taskManager.createSubtask(null);
+        assertNull(subtaskNullId, "При создании пустой подзадачи получен не пустой идентификатор");
         Integer subId32 = taskManager.createSubtask(
                 new Subtask(epicId3, "sud32", "this sub32"));
+        assertNotNull(subId32, "Получен пустой идентификатр верно созданной подзадачи");
         final Subtask subtask = taskManager.getSubtask(subId32);
         final Integer id = subtask.getId();
+        assertEquals(subId32, id, "Идентификатор полученной задачи не равен идентификатору," +
+                " по которому эту подзадачу получили");
         final List<Integer> subtaskIds = taskManager.getEpic(epicId3).getSubtaskIds();
         final boolean contains = subtaskIds.contains(id);
+        assertTrue(contains, "В полученом списке идентификаторов подзадач отсутсвует " +
+                "заведомо верный идентификатор созданной ранее подзадачи");
         Integer subId = taskManager.createSubtask(
                 new Subtask(569, "sud", "this sub"));
-        assertAll(
-                () -> assertNull(subtaskNullId),
-                () -> assertNull(subId),
-                () -> assertNotNull(subId32),
-                () -> assertEquals(subId32, id),
-                () -> assertTrue(contains)
-        );
-
+        assertNull(subId, "Создана не пустая подзадача с заведомо не верным идентификатором эпика");
     }
 
     @Test
@@ -203,36 +202,34 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         final Subtask subtask = taskManager.getSubtask(subId31);
         final Integer id = subtask.getId();
         final Status status = subtask.getStatus();
+        assertNull(status, "Статус подзадачи с неустановленным статусо не равен NULL!");
         subtask.setStatus(Status.IN_PROGRESS);
         taskManager.updateSubtask(subtask);
         final Subtask subtask1 = taskManager.getSubtask(subId31);
         final Integer id1 = subtask1.getId();
+        assertEquals(id, id1, "Идентификаторы подзадачи до и после обновления не рамны");
         final Status status1 = subtask1.getStatus();
-        assertAll(
-                () -> assertNull(status),
-                () -> assertEquals(id, id1),
-                () -> assertEquals(status1, Status.IN_PROGRESS)
-        );
+        assertEquals(status1, Status.IN_PROGRESS, "Статус полученной подзадачи с ранее установленным" +
+                " статусом \"IN_PROGRESS\" не равен IN_PROGRESS");
     }
 
     @Test
     void deleteSubtaskTest() {
         final Subtask subtask = taskManager.getSubtask(subId21);
-        final int epicId = subtask.getEpicId();
+        assertNotNull(subtask, "По верному идентификатору получена пустая подзадача");
 
+        final int epicId = subtask.getEpicId();
         final List<Integer> subtaskIds = taskManager.getEpic(epicId).getSubtaskIds();
         final boolean contains = subtaskIds.contains(subId21);
+        assertTrue(contains, "Идентификатор существующей подзадачи отсутствует в в полученном списке подзадач");
 
         taskManager.deleteSubtask(subId21);
         final Subtask subtask2 = taskManager.getSubtask(subId21);
+        assertNull(subtask2, "По идентификатору ранее удаленной подзадачи получена не пустая подзадача");
+
         final List<Integer> subtaskIds1 = taskManager.getEpic(epicId).getSubtaskIds();
         final boolean contains1 = subtaskIds1.contains(subId21);
-        assertAll(
-                () -> assertNull(subtask2),
-                () -> assertNotNull(subtask),
-                () -> assertTrue(contains),
-                () -> assertFalse(contains1)
-        );
+        assertFalse(contains1, "Идентификатор ранеее удаленной подзадачи входит в полученный список подзадач");
     }
 
     @Test
@@ -241,7 +238,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 .stream()
                 .map(Task::getId)
                 .collect(Collectors.toSet());
-        assertTrue(ids.containsAll(Set.of(epicId1, epicId2, epicId3)));
+        assertTrue(ids.containsAll(Set.of(epicId1, epicId2, epicId3)), "Получен не верный список эпиков");
     }
 
     @Test

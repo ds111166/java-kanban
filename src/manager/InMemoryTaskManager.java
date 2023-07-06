@@ -393,20 +393,18 @@ public class InMemoryTaskManager implements TaskManager {
         final Integer taskId = task.getId();
         Integer taskIdStartTime = busyTimeUnits.get(startTime);
         Integer taskIdEndTime = busyTimeUnits.get(endTime);
-        boolean isValid = true;
+
         if (taskIdStartTime != null && !taskIdStartTime.equals(taskId)) {
-            isValid = false;
             final Task t = tasks.get(taskIdStartTime);
-            throw new TaskValidationException("Задача пересекаются с id="
+            throw new TaskValidationException("Задача пересекается с id="
                     + t.getId() + " c " + t.getStartTime() + " по " + t.getEndTime());
         }
         if (taskIdEndTime != null && !taskIdEndTime.equals(taskId)) {
-            isValid = false;
             final Task t = tasks.get(taskIdEndTime);
-            throw new TaskValidationException("Задача пересекаются с id="
+            throw new TaskValidationException("Задача пересекается с id="
                     + t.getId() + " c " + t.getStartTime() + " по " + t.getEndTime());
         }
-        return isValid;
+        return true;
     }
 
     /**
