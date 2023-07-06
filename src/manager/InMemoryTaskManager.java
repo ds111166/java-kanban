@@ -16,39 +16,14 @@ public class InMemoryTaskManager implements TaskManager {
     protected int generatorId;
     protected final Map<Integer, Task> tasks;
     protected final HistoryManager history;
-    protected final TreeSet<Integer> sortedTaskIds;
+    protected final TreeSet<Integer> prioritizedTasks;
     protected final Map<LocalDateTime, Integer> busyTimeUnits;
 
     public InMemoryTaskManager() {
         this.generatorId = 0;
         this.tasks = new HashMap<>();
         this.history = Managers.getDefaultHistory();
-        this.sortedTaskIds = new TreeSet<>((id1, id2) -> {
-            Task task1 = tasks.get(id1);
-            Task task2 = tasks.get(id2);
-            if (task1 == null && task2 == null) {
-                return 0;
-            } else if (task2 == null) {
-                return 0;//1;
-            } else if (task1 == null) {
-                return 0;//-1;
-            }
-            LocalDateTime startTime1 = task1.getStartTime();
-            LocalDateTime startTime2 = task2.getStartTime();
-            if (startTime1 == null && startTime2 == null) {
-                return Integer.compare(task1.getId(), task2.getId());
-            } else if (startTime1 == null) {
-                return 1;
-            } else if (startTime2 == null) {
-                return -1;
-            } else if (startTime1.isAfter(startTime2)) {
-                return 1;
-            } else if (startTime1.isBefore(startTime2)) {
-                return -1;
-            } else {
-                return Integer.compare(task1.getId(), task2.getId());
-            }
-        });
+        this.prioritizedTasks = new TreeSet<>(TASK_COMPARATOR);
         this.busyTimeUnits = new HashMap<>();
     }
 
@@ -69,7 +44,7 @@ public class InMemoryTaskManager implements TaskManager {
             Task task = tasks.get(id);
             if (TaskType.TASK == task.getType()) {
                 clearingInterval(task);
-                sortedTaskIds.remove(id);
+                prioritizedTasks.remove(id);
                 iterator.remove();
 
             }
@@ -92,7 +67,7 @@ public class InMemoryTaskManager implements TaskManager {
         Task newTask = cloneTask(createdTask);
         tasks.put(id, newTask);
         newTask.setId(id);
-        sortedTaskIds.add(id);
+        prioritizedTasks.add(id);
         fillingInterval(newTask);
         return id;
     }
@@ -107,7 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         Task updatedTask = cloneTask(task);
         tasks.put(updatedTaskId, updatedTask);
-        sortedTaskIds.add(updatedTaskId);
+        prioritizedTasks.add(updatedTaskId);
         clearingInterval(savedTask);
         fillingInterval(updatedTask);
     }
@@ -118,7 +93,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (deletedTask != null) {
             clearingInterval(deletedTask);
         }
-        sortedTaskIds.remove(deletedTaskId);
+        prioritizedTasks.remove(deletedTaskId);
         tasks.remove(deletedTaskId);
         history.remove(deletedTaskId);
 
@@ -144,11 +119,11 @@ public class InMemoryTaskManager implements TaskManager {
                     epic.cleanSubtaskIds();
                     updateEpicStatus(id);
                     updateExecutionTimeEpic(id);
-                    sortedTaskIds.add(id);
+                    prioritizedTasks.add(id);
                     break;
                 case SUBTASK:
                     clearingInterval(task);
-                    sortedTaskIds.remove(id);
+                    prioritizedTasks.remove(id);
                     iterator.remove();
                     break;
             }
@@ -180,8 +155,8 @@ public class InMemoryTaskManager implements TaskManager {
         basicEpic.addSubtaskId(newSubtask.getId());
         updateEpicStatus(epicId);
         updateExecutionTimeEpic(epicId);
-        sortedTaskIds.add(id);
-        sortedTaskIds.add(epicId);
+        prioritizedTasks.add(id);
+        prioritizedTasks.add(epicId);
         fillingInterval(newSubtask);
         return id;
     }
@@ -202,8 +177,8 @@ public class InMemoryTaskManager implements TaskManager {
         tasks.put(updatedSubtaskId, updatedSubtask);
         updateEpicStatus(epicId);
         updateExecutionTimeEpic(epicId);
-        sortedTaskIds.add(updatedSubtaskId);
-        sortedTaskIds.add(epicId);
+        prioritizedTasks.add(updatedSubtaskId);
+        prioritizedTasks.add(epicId);
         clearingInterval(savedSubtask);
         fillingInterval(updatedSubtask);
     }
@@ -213,7 +188,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!tasks.containsKey(id)) {
             return;
         }
-        sortedTaskIds.remove(id);
+        prioritizedTasks.remove(id);
         Subtask subtask = (Subtask) tasks.remove(id);
         clearingInterval(subtask);
         history.remove(id);
@@ -222,7 +197,7 @@ public class InMemoryTaskManager implements TaskManager {
         Integer epicId = epic.getId();
         updateEpicStatus(epicId);
         updateExecutionTimeEpic(epicId);
-        sortedTaskIds.add(epicId);
+        prioritizedTasks.add(epicId);
     }
 
     @Override
@@ -244,7 +219,7 @@ public class InMemoryTaskManager implements TaskManager {
                 if (taskType == TaskType.SUBTASK) {
                     clearingInterval(task);
                 }
-                sortedTaskIds.remove(id);
+                prioritizedTasks.remove(id);
                 iterator.remove();
             }
         }
@@ -267,7 +242,7 @@ public class InMemoryTaskManager implements TaskManager {
         newEpic.setId(epicId);
         tasks.put(epicId, newEpic);
         updateEpicStatus(epicId);
-        sortedTaskIds.add(epicId);
+        prioritizedTasks.add(epicId);
         return epicId;
     }
 
@@ -284,7 +259,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic updatedEpic = (Epic) cloneTask(epic);
         tasks.put(updatedEpicId, updatedEpic);
         updateEpicStatus(updatedEpicId);
-        sortedTaskIds.add(updatedEpicId);
+        prioritizedTasks.add(updatedEpicId);
     }
 
     @Override
@@ -292,7 +267,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!tasks.containsKey(id)) {
             return;
         }
-        sortedTaskIds.remove(id);
+        prioritizedTasks.remove(id);
         final Epic epic = (Epic) tasks.remove(id);
         history.remove(id);
         for (Integer subtaskId : epic.getSubtaskIds()) {
@@ -300,7 +275,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (task != null) {
                 this.clearingInterval(task);
             }
-            sortedTaskIds.remove(subtaskId);
+            prioritizedTasks.remove(subtaskId);
             tasks.remove(subtaskId);
             history.remove(subtaskId);
 
@@ -328,7 +303,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getPrioritizedTasks() {
-        return sortedTaskIds
+        return prioritizedTasks
                 .stream()
                 .map(id -> cloneTask(tasks.get(id)))
                 .collect(Collectors.toList());
@@ -480,5 +455,28 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    private final Comparator<Integer> TASK_COMPARATOR = new Comparator<>() {
+        @Override
+        public int compare(Integer id1, Integer id2) {
+            if (id1 == null || id2== null) {
+                return 0;
+            }
+            Task task1 = tasks.get(id1);
+            Task task2 = tasks.get(id2);
+            if (task1 == null || task2 == null) {
+                return 0;
+            }
+            LocalDateTime startTime1 = task1.getStartTime();
+            if (startTime1 == null) {
+                startTime1 = LocalDateTime.MAX;
+            }
+            LocalDateTime startTime2 = task2.getStartTime();
+            if (startTime2 == null) {
+                startTime2 = LocalDateTime.MAX;
+            }
+            final int result = startTime1.compareTo(startTime2);
+            return (result == 0) ? Integer.compare(id1, id2) : result;
+        }
+    };
 
 }

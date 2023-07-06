@@ -75,7 +75,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 fileManager.updateEpicStatus(id);
                 fileManager.updateExecutionTimeEpic(id);
             });
-            fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.sortedTaskIds::add);
+            fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.prioritizedTasks::add);
 
             return fileManager;
         } catch (IOException e) {
