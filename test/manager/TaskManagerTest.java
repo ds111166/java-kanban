@@ -4,10 +4,13 @@ import entities.Epic;
 import entities.Status;
 import entities.Subtask;
 import entities.Task;
+import manager.exceptions.ManagerSaveException;
+import manager.exceptions.TaskValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -68,47 +71,61 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void createTaskTest() {
         final Integer taskNullId = taskManager.createTask(null);
+        assertNull(taskNullId, "При создании пустой задачи получен не пустой идентификатор");
+
         LocalDateTime startTime = LocalDateTime.parse("2001-10-02T20:22:02");
         final Integer taskId = taskManager.createTask(
                 new Task("createTaskTest", "this create Task Test", 11, startTime));
-        final Integer taskId1 = taskManager.createTask(
-                new Task("createTaskTest1", "this create Task Test1", 11, startTime));
+        assertNotNull(taskId, "при создании задачи получен пустой идентификатор");
+        final TaskValidationException exception1 = assertThrows(
+                TaskValidationException.class,
+                () -> {
+                    final Integer taskIdexception = taskManager.createTask(
+                            new Task("createTaskTest1", "this create Task Test1", 11, startTime));
+                });
+        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception1.getMessage(),
+                "неверное сообщение исклчения");
+
         final Task task = taskManager.getTask(taskId);
 
         LocalDateTime startTime1 = startTime.plusMinutes(2);
-        final Integer taskId2 = taskManager.createTask(
-                new Task("createTaskTest2", "this create Task Test2", 11, startTime1));
+
+        final TaskValidationException exception2 = assertThrows(
+                TaskValidationException.class,
+                () -> {
+                    final Integer taskIdexception = taskManager.createTask(
+                            new Task("createTaskTest2", "this create Task Test2", 11, startTime1));
+                });
+        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception2.getMessage(),
+                "неверное сообщение исклчения");
+
         LocalDateTime startTime2 = startTime.plusMinutes(11);
-        final Integer taskId3 = taskManager.createTask(
-                new Task("createTaskTest2", "this create Task Test2", 11, startTime2));
+        final TaskValidationException exception3 = assertThrows(
+                TaskValidationException.class,
+                () -> {
+                    final Integer taskId3 = taskManager.createTask(
+                            new Task("createTaskTest2", "this create Task Test2", 11, startTime2));
+                });
+        assertEquals("Задача пересекаются с id=13 c 2001-10-02T20:22 по 2001-10-02T20:33", exception3.getMessage(),
+                "неверное сообщение исклчения");
+
         LocalDateTime startTime3 = startTime.plusMinutes(12);
         final Integer taskId4 = taskManager.createTask(
                 new Task("createTaskTest2", "this create Task Test2", 11, startTime3));
-        assertAll(
-                () -> assertNull(taskNullId),
-                () -> assertNotNull(taskId),
-                () -> assertNotNull(task),
-                () -> assertEquals("createTaskTest", task.getName()),
-                () -> assertEquals(taskId, task.getId()),
-                () -> assertNull(taskId1),
-                () -> assertNull(taskId2),
-                () -> assertNull(taskId3),
-                () -> assertNotNull(taskId4)
-        );
+        assertNotNull(taskId4, "при создании задачи получен пустой идентификатор");
+
     }
 
     @Test
     void updateTaskTest() {
         final Task task = taskManager.getTask(taskId1);
         final Status status = task.getStatus();
+        assertNull(status, "получен не пустой статус");
         task.setStatus(Status.DONE);
         taskManager.updateTask(task);
         final Task task1 = taskManager.getTask(taskId1);
         final Status status1 = task1.getStatus();
-        assertAll(
-                () -> assertNull(status),
-                () -> assertEquals(Status.DONE, status1)
-        );
+        assertEquals(Status.DONE, status1, "получен статус не равный: DONE");
     }
 
     @Test

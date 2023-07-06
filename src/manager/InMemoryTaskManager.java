@@ -1,6 +1,7 @@
 package manager;
 
 import entities.*;
+import manager.exceptions.TaskValidationException;
 import manager.history.HistoryManager;
 import manager.utilities.CSVTaskFormat;
 import manager.utilities.Managers;
@@ -256,7 +257,6 @@ public class InMemoryTaskManager implements TaskManager {
         Epic updatedEpic = (Epic) cloneTask(epic);
         tasks.put(updatedEpicId, updatedEpic);
         updateEpic(updatedEpicId);
-        //updateEpicStatus(updatedEpicId);
         prioritizedTasks.add(updatedEpicId);
     }
 
@@ -385,28 +385,28 @@ public class InMemoryTaskManager implements TaskManager {
      * возвращает FALSE и возвращает TRUE в противном случае
      */
     protected boolean isTaskTimingValid(Task task) {
-        if (task == null) {
-            return false;
-        }
         LocalDateTime startTime = task.getStartTime();
         if (startTime == null) {
             return true;
         }
-        startTime = LocalDateTime.of(startTime.getYear()
-                , startTime.getMonth()
-                , startTime.getDayOfMonth()
-                , startTime.getHour()
-                , startTime.getMinute());
         LocalDateTime endTime = startTime.plusMinutes(task.getDuration());
         final Integer taskId = task.getId();
-        if (!busyTimeUnits.containsKey(startTime) && !busyTimeUnits.containsKey(endTime)) {
-            return true;
-        } else if (taskId != null) {
-            final Integer taskIdStartTime = busyTimeUnits.get(startTime);
-            final Integer taskIdEndTime = busyTimeUnits.get(startTime);
-            return taskId.equals(taskIdStartTime) && taskId.equals(taskIdEndTime);
+        final Integer taskIdStartTime = busyTimeUnits.get(startTime);
+        final Integer taskIdEndTime = busyTimeUnits.get(endTime);
+        boolean isValid = true;
+        if (taskIdStartTime != null && !taskIdStartTime.equals(taskId)) {
+            isValid = false;
+            final Task t = tasks.get(taskIdStartTime);
+            throw new TaskValidationException("Задача пересекаются с id="
+                    + t.getId() + " c " + t.getStartTime() + " по " + t.getEndTime());
         }
-        return false;
+        if (taskIdEndTime != null && !taskIdEndTime.equals(taskId)) {
+            isValid = false;
+            final Task t = tasks.get(taskIdEndTime);
+            throw new TaskValidationException("Задача пересекаются с id="
+                    + t.getId() + " c " + t.getStartTime() + " по " + t.getEndTime());
+        }
+        return isValid;
     }
 
     /**
