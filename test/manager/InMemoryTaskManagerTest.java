@@ -103,7 +103,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
     void updateExecutionTimeEpicTest() {
         Integer epicId = taskManager.createEpic(new Epic("EpicStatusTest", "this EpicStatusTest"));
         Epic epic = taskManager.getEpic(epicId);
-        final int duration1 = epic.getDuration();
+        final long duration1 = epic.getDuration();
         final LocalDateTime startTimeEpic1 = epic.getStartTime();
         final LocalDateTime endTimeEpic1 = epic.getEndTime();
 
@@ -116,7 +116,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
                 new Subtask(epicId, "sub3", "this sub3", 45, startTime.plusMinutes(2 + 12)));
 
         epic = taskManager.getEpic(epicId);
-        final int duration2 = epic.getDuration();
+        final long duration2 = epic.getDuration();
         final LocalDateTime startTimeEpic2 = epic.getStartTime();
         final LocalDateTime endTimeEpic2 = epic.getEndTime();
         final Subtask subtask1 = taskManager.getSubtask(subId1);
@@ -124,7 +124,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
         final Subtask subtask3 = taskManager.getSubtask(subId3);
         final LocalDateTime startTimeSubtask1 = subtask1.getStartTime();
         final LocalDateTime endTimesubtask3 = subtask3.getEndTime();
-        int duration = subtask1.getDuration() + subtask2.getDuration() + subtask3.getDuration();
+        long duration = subtask1.getDuration() + subtask2.getDuration() + subtask3.getDuration();
 
         assertAll(
                 () -> assertEquals(duration1, 0),

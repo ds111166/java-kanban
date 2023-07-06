@@ -9,7 +9,7 @@ public class Task {
     protected String name;
     protected String description;
     protected Status status;
-    protected int duration;
+    protected long duration;
     protected LocalDateTime startTime;
 
 
@@ -87,7 +87,7 @@ public class Task {
         return TaskType.TASK;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
@@ -124,7 +124,7 @@ public class Task {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
-        result = 31 * result + duration;
+        result = 31 * result + (int) (duration ^ (duration >>> 32));
         result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
         return result;
     }

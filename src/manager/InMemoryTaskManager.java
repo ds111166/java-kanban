@@ -382,7 +382,7 @@ public class InMemoryTaskManager implements TaskManager {
                 if (subtask == null) {
                     continue;
                 }
-                final int durationSubtask = subtask.getDuration();
+                final long durationSubtask = subtask.getDuration();
                 final LocalDateTime startTimeSubtask = subtask.getStartTime();
                 final LocalDateTime endTimeSubtask = (startTimeSubtask == null)
                         ? null
@@ -451,7 +451,7 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getDayOfMonth()
                 , startTime.getHour()
                 , startTime.getMinute());
-        final int duration = task.getDuration();
+        final long duration = task.getDuration();
         for (int m = 0; m < duration + 1; m++) {
             busyTimeUnits.put(startTime.plusMinutes(m), taskId);
         }
@@ -474,7 +474,7 @@ public class InMemoryTaskManager implements TaskManager {
                 , startTime.getDayOfMonth()
                 , startTime.getHour()
                 , startTime.getMinute());
-        final int duration = task.getDuration();
+        final long duration = task.getDuration();
         for (int m = 0; m < duration + 1; m++) {
             busyTimeUnits.remove(startTime.plusMinutes(m));
         }

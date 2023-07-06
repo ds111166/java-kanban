@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Epic extends Task {
-    protected List<Integer> subtaskIds;
+    private List<Integer> subtaskIds;
     protected LocalDateTime endTime;
 
     public Epic(String title, String description) {
