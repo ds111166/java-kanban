@@ -32,12 +32,10 @@ class InMemoryHistoryManagerTest {
     @Test
     void addTest() {
         final List<Task> history = historyManager.getHistory();
-        assertAll(
-                () -> assertTrue(history.size() == 2),
-                () -> assertTrue(history.contains(task1)),
-                () -> assertTrue(history.contains(task2)),
-                () -> assertFalse(history.contains(task3))
-        );
+        assertTrue(history.size() == 2, "количество задач в Истории не равно двум!");
+        assertTrue(history.contains(task1), "История не содержит иденификатор 'task1'");
+        assertTrue(history.contains(task2), "История не содержит иденификатор 'task2'");
+        assertFalse(history.contains(task3), "История содержит иденификатор задачи 'task3', а не должна ведь!");
     }
 
     @Test
@@ -46,12 +44,12 @@ class InMemoryHistoryManagerTest {
         historyManager.remove(task2.getId());
         historyManager.remove(1000);
         final List<Task> history = historyManager.getHistory();
-        assertAll(
-                () -> assertTrue(history.size() == 2),
-                () -> assertTrue(history.contains(task1)),
-                () -> assertFalse(history.contains(task2)),
-                () -> assertTrue(history.contains(task3))
-        );
+
+        assertTrue(history.size() == 2, "количество задач в Истории не равно двум!");
+        assertTrue(history.contains(task1), "История не содержит иденификатор 'task1'");
+        assertFalse(history.contains(task2), "История содержит иденификатор 'task2', а не должна ведь!");
+        assertTrue(history.contains(task3), "История не содержит иденификатор 'task3'");
+
     }
 
     @Test
@@ -60,12 +58,11 @@ class InMemoryHistoryManagerTest {
         historyManager.remove(task1.getId());
         historyManager.remove(task2.getId());
         final List<Task> history1 = historyManager.getHistory();
-        assertAll(
-                () -> assertTrue(history.size() == 2),
-                () -> assertTrue(history.contains(task1)),
-                () -> assertTrue(history.contains(task2)),
-                () -> assertFalse(history.contains(task3)),
-                () -> assertTrue(history1.isEmpty())
-        );
+        assertTrue(history.size() == 2, "количество задач в Истории не равно двум!");
+        assertTrue(history.contains(task1), "История не содержит иденификатор 'task1'");
+        assertTrue(history.contains(task2), "История не содержит иденификатор 'task2'");
+        assertFalse(history.contains(task3), "История содержит иденификатор задачи 'task3', а не должна ведь!");
+        assertTrue(history1.isEmpty(),"История после удаления всех задач НЕ ПУСТАЯ!!!!");
+
     }
 }

@@ -391,8 +391,8 @@ public class InMemoryTaskManager implements TaskManager {
         }
         LocalDateTime endTime = startTime.plusMinutes(task.getDuration());
         final Integer taskId = task.getId();
-        final Integer taskIdStartTime = busyTimeUnits.get(startTime);
-        final Integer taskIdEndTime = busyTimeUnits.get(endTime);
+        Integer taskIdStartTime = busyTimeUnits.get(startTime);
+        Integer taskIdEndTime = busyTimeUnits.get(endTime);
         boolean isValid = true;
         if (taskIdStartTime != null && !taskIdStartTime.equals(taskId)) {
             isValid = false;
