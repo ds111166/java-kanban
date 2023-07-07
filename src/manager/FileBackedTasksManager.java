@@ -45,9 +45,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     fileManager.tasks.put(id, task);
 
                     final TaskType taskType = task.getType();
-                    if (taskType != TaskType.EPIC) {
-                        fileManager.fillingInterval(task);
-                    } else {
+                    if (taskType == TaskType.EPIC) {
                         idsEpic.add(id);
                     }
                     if (taskType == TaskType.SUBTASK) {
@@ -71,11 +69,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 }
                 basicEpic.addSubtaskId(idSubtask);
             }
-            idsEpic.forEach(id -> {
+            for (Integer id : idsEpic) {
                 fileManager.updateEpic(id);
-                //fileManager.updateEpicStatus(id);
-                //fileManager.updateExecutionTimeEpic(id);
-            });
+            }
             fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.prioritizedTasks::add);
 
             return fileManager;
@@ -203,88 +199,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         } catch (IOException e) {
             throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         }
-    }
-
-
-    public static void main(String[] args) {
-        /*
-        Для этого создайте метод static void main(String[] args) в классе FileBackedTasksManager и реализуйте небольшой сценарий:
-        Заведите несколько разных задач, эпиков и подзадач.
-        Запросите некоторые из них, чтобы заполнилась история просмотра.
-        Создайте новый FileBackedTasksManager менеджер из этого же файла.
-        Проверьте, что история просмотра восстановилась верно и все задачи, эпики, подзадачи, которые были в старом, есть в новом менеджере.
-        */
-        /*TaskManager taskManager = Managers.getDefault();
-        //создидим три задачи
-        Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
-        Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
-        Integer taskId3 = taskManager.createTask(new Task("Задача 3", "Это \"Задача 3\""));
-        //создидим два эпика
-        Integer epicId1 = taskManager.createEpic(new Epic("Эпик 1", "Это Эпик 1!"));
-        Integer epicId2 = taskManager.createEpic(new Epic("Эпик 2", "Это Эпик 2!"));
-        //для 1-го эпика создаим 2 подзадачи
-        Integer subtaskId1 = taskManager.createSubtask(new Subtask(epicId1, "Подзадача 1", "Подзадача 1 эпика 1"));
-        Integer subtaskId2 = taskManager.createSubtask(new Subtask(epicId1, "Подзадача 2", "Подзадача 2 эпика 1"));
-        //для 2-го эпика создаим одну подзадачу
-        Integer subtaskId3 = taskManager.createSubtask(new Subtask(epicId2, "Подзадача 3", "Подзадача 1 эпика 2"));
-        //Поменяем статусы
-        Task task2 = taskManager.getTask(taskId1);
-        task2.setStatus(Status.DONE);
-        taskManager.updateTask(task2);
-
-        Subtask subtask2 = taskManager.getSubtask(subtaskId2);
-        subtask2.setStatus(Status.DONE);
-        taskManager.updateSubtask(subtask2);
-        //запросим несколько задач
-        taskManager.getTask(taskId1);
-        taskManager.getTask(taskId2);
-        taskManager.getEpic(epicId1);
-        taskManager.getSubtask(subtaskId2);
-        System.out.println("\nПросмотр истории просмотров задач: ");
-        for (Task task : taskManager.getHistory()) {
-            System.out.println(task);
-        }
-
-        //получаем новый менеджер задач с хранилищем в том же файле
-        final FileBackedTasksManager fileManager = FileBackedTasksManager.
-                loadFromFile(new File("./resources/task.csv"));
-
-        System.out.println("\nПросмотр истории просмотров задач из созданного менеджера: ");
-        for (Task task : fileManager.getHistory()) {
-            System.out.println(task);
-        }
-
-        System.out.println("\nСписок задач, эпиков, подзадач из СТАРОГО менеджера:");
-        System.out.println("Список задач:");
-        for (Task task : taskManager.getTasks()) {
-            System.out.println(task);
-        }
-        System.out.println("Список эпиков:");
-        for (Epic epic : taskManager.getEpics()) {
-            System.out.println(epic);
-        }
-
-        System.out.println("Список подзадач:");
-        for (Subtask subtask : taskManager.getSubtasks()) {
-            System.out.println(subtask);
-        }
-
-        System.out.println("\nСписок задач, эпиков, подзадач из НОВОГО менеджера:");
-        System.out.println("Список задач:");
-        for (Task task : fileManager.getTasks()) {
-            System.out.println(task);
-        }
-        System.out.println("Список эпиков:");
-        for (Epic epic : fileManager.getEpics()) {
-            System.out.println(epic);
-        }
-
-        System.out.println("Список подзадач:");
-        for (Subtask subtask : fileManager.getSubtasks()) {
-            System.out.println(subtask);
-        }
-    */
-
     }
 
 }

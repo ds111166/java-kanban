@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryHistoryManagerTest {
 
@@ -32,6 +33,7 @@ class InMemoryHistoryManagerTest {
     @Test
     void addTest() {
         final List<Task> history = historyManager.getHistory();
+
         assertTrue(history.size() == 2, "количество задач в Истории не равно двум!");
         assertTrue(history.contains(task1), "История не содержит иденификатор 'task1'");
         assertTrue(history.contains(task2), "История не содержит иденификатор 'task2'");
@@ -58,11 +60,12 @@ class InMemoryHistoryManagerTest {
         historyManager.remove(task1.getId());
         historyManager.remove(task2.getId());
         final List<Task> history1 = historyManager.getHistory();
+
         assertTrue(history.size() == 2, "количество задач в Истории не равно двум!");
         assertTrue(history.contains(task1), "История не содержит иденификатор 'task1'");
         assertTrue(history.contains(task2), "История не содержит иденификатор 'task2'");
         assertFalse(history.contains(task3), "История содержит иденификатор задачи 'task3', а не должна ведь!");
-        assertTrue(history1.isEmpty(),"История после удаления всех задач НЕ ПУСТАЯ!!!!");
+        assertTrue(history1.isEmpty(), "История после удаления всех задач НЕ ПУСТАЯ!!!!");
 
     }
 }

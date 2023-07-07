@@ -43,73 +43,71 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
     }
 
     @Test
-    void loadFromFile() {
+    void loadFromFileTest() {
 
         FileBackedTasksManager fileBackedTasksManager = FileBackedTasksManager.loadFromFile(FILE);
+
         final List<Integer> tasksIds = fileBackedTasksManager.getTasks()
                 .stream().map(Task::getId).collect(Collectors.toList());
+        assertTrue(tasksIds.size() == 3
+                        & tasksIds.containsAll(Set.of(taskId1, taskId2, taskId3)),
+                "после загрузки из файла список Задач имеет не верный размер и состав");
+
         final List<Integer> subtasksIds = fileBackedTasksManager.getSubtasks()
                 .stream().map(Task::getId).collect(Collectors.toList());
+        assertTrue(subtasksIds.size() == 6
+                        & subtasksIds.containsAll(Set.of(subId11, subId12, subId21, subId22, subId23, subId31)),
+                "после загрузки из файла список Подзадач имеет не верный размер и состав");
+
         final List<Integer> epicsIds = fileBackedTasksManager.getEpics()
                 .stream().map(Task::getId).collect(Collectors.toList());
+        assertTrue(epicsIds.size() == 3
+                        & epicsIds.containsAll(Set.of(epicId1, epicId2, epicId3)),
+                "после загрузки из файла список Эпиков имеет не верный размер и состав");
+
         final List<Integer> historyIds = taskManager.getHistory()
                 .stream().map(Task::getId).collect(Collectors.toList());
-
+        assertTrue(historyIds.size() == 1
+                & historyIds.contains(taskId3), "после загрузки из файла список  Истории " +
+                "имеет не верный размер и состав");
 
         clearManagerForTest();
         final List<Task> tasks1 = taskManager.getTasks();
         final List<Subtask> subtasks1 = taskManager.getSubtasks();
         final List<Epic> epics1 = taskManager.getEpics();
         final List<Task> history1 = taskManager.getHistory();
-
+        assertTrue(tasks1.isEmpty()
+                & subtasks1.isEmpty()
+                & epics1.isEmpty()
+                & history1.isEmpty(), "после удаления всех задач, эпиков, подзадач, " +
+                "полученный соответствующие списки не пусты");
 
         FileBackedTasksManager fileBackedTasksManager1 = FileBackedTasksManager.loadFromFile(FILE);
         final List<Task> tasks2 = fileBackedTasksManager1.getTasks();
         final List<Subtask> subtasks2 = fileBackedTasksManager1.getSubtasks();
         final List<Epic> epics2 = fileBackedTasksManager1.getEpics();
         final List<Task> history2 = taskManager.getHistory();
-
+        assertTrue(tasks2.isEmpty()
+                & subtasks2.isEmpty()
+                & epics2.isEmpty()
+                & history2.isEmpty(), "после создания менеджера загрузки из файла данных без задач, подзадач, эпиков и истории " +
+                "полученные соответствующие списки не пусты");
 
         final Integer epId1 = fileBackedTasksManager1.createEpic(new Epic("epic1", "this epic1"));
         final Integer epId2 = fileBackedTasksManager1.createEpic(new Epic("epic2", "this epic2"));
         FileBackedTasksManager fileBackedTasksManager2 = FileBackedTasksManager.loadFromFile(FILE);
-        final List<Task> tasks3 = fileBackedTasksManager1.getTasks();
-        final List<Subtask> subtasks3 = fileBackedTasksManager1.getSubtasks();
-        final List<Integer> epicsIds3 = fileBackedTasksManager1.getEpics()
+        final List<Integer> epicsIds3 = fileBackedTasksManager2.getEpics()
                 .stream().map(Task::getId).collect(Collectors.toList());
-        final List<Task> history3 = fileBackedTasksManager2.getHistory();
-
+        assertTrue(epicsIds3.containsAll(Set.of(epId1, epId2)), "после создания менеджера загрузки из файла" +
+                "с двумя эпиками полученный список эпиков не верен по своему составу");
 
         final ManagerSaveException exception = assertThrows(
                 ManagerSaveException.class,
                 () -> FileBackedTasksManager
                         .loadFromFile(new File("./resources/task2222.csv")));
-
-        assertAll(
-                () -> assertTrue(subtasksIds.size() == 6
-                        & subtasksIds.containsAll(Set.of(subId11, subId12, subId21, subId22, subId23, subId31))),
-                () -> assertTrue(tasksIds.size() == 3
-                        & tasksIds.containsAll(Set.of(taskId1, taskId2, taskId3))),
-                () -> assertTrue(epicsIds.size() == 3
-                        & epicsIds.containsAll(Set.of(epicId1, epicId2, epicId3))),
-                () -> assertTrue(historyIds.size() == 1
-                        & historyIds.contains(taskId3)),
-                () -> assertTrue(tasks1.isEmpty()
-                        & subtasks1.isEmpty()
-                        & epics1.isEmpty()
-                        & history1.isEmpty()),
-                () -> assertTrue(tasks2.isEmpty()
-                        & subtasks2.isEmpty()
-                        & epics2.isEmpty()
-                        & history2.isEmpty()),
-                () -> assertTrue(tasks2.isEmpty()
-                        & subtasks2.isEmpty()
-                        & history3.isEmpty()
-                        & epicsIds3.size() == 2),
-                () -> assertTrue(epicsIds3.containsAll(Set.of(epId1, epId2))),
-                () -> assertEquals("Can't read from file: task2222.csv", exception.getMessage())
-        );
-
+        assertEquals("Can't read from file: task2222.csv", exception.getMessage(),
+                "при попытке создания менеджера загрузки из несуществующего файла данных" +
+                        " не вызвано исключение с верным сообщением об ошибке");
 
     }
 
