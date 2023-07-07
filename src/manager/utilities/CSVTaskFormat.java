@@ -9,9 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CSVTaskFormat {
-    private CSVTaskFormat() {
-    }
-
     /**
      * преобразует задачу в строку
      */
