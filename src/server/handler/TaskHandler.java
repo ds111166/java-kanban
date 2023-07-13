@@ -1,91 +1,129 @@
 package server.handler;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import entities.Epic;
-import entities.Subtask;
 import entities.Task;
+import javafx.util.Pair;
 import manager.TaskManager;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.TypeVariable;
+import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
+import static server.handler.HandlerUtilities.getParametrId;
 import static server.handler.HandlerUtilities.queryToMap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
-public class TaskHandler<T extends Task> implements HttpHandler {
-    private final TaskManager manager;
-    private final Gson gson;
-    private Function<Integer, T> getEntity;
-    private  Consumer<T> updateEntity;
-    private  Consumer<Integer> deleteEntity;
-    private  Supplier<List<T>> getEntities;
-    final Class<?> genericDeclaration
 
-    public TaskHandler (TaskManager manager) {
-        this.manager = manager;
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        this.gson = gsonBuilder.create();
-        final TypeVariable<? extends Class<?>>[] typeParameters = this.getClass().getTypeParameters();
-        genericDeclaration = typeParameters[0].getGenericDeclaration();
-        String genericName = genericDeclaration.getCanonicalName();
-        if(genericName.contains("Epic")){
-            getEntity = id ->  (T) manager.getEpic(id);
-            updateEntity = epic -> manager.updateEpic((Epic)epic);
-            deleteEntity = manager::deleteEpic;
-            getEntities = () -> (List<T>)manager.getEpics();
-        } else if (genericName.contains("Subtask")) {
-            getEntity = id ->  (T) manager.getSubtask(id);
-            updateEntity = epic -> manager.updateSubtask((Subtask)epic);
-            deleteEntity = manager::deleteSubtask;
-            getEntities = () -> (List<T>)manager.getSubtasks();
-        } else {
-            getEntity = id ->  (T) manager.getTask(id);
-            updateEntity = epic -> manager.updateTask((Task)epic);
-            deleteEntity = manager::deleteTask;
-            getEntities = () -> (List<T>)manager.getTasks();
-        }
+public class TaskHandler extends TasksHandler {
 
+    public TaskHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        final String requestMethod = exchange.getRequestMethod();
-        final InputStream requestBody = exchange.getRequestBody();
-        final String requestQuery = exchange.getRequestURI().getQuery();
-        final Map<String, String> parametrs = queryToMap(requestQuery);
-
-        if ("GET".equals(requestMethod)) {
-            final String paramId = parametrs.get("id");
-            if(paramId == null) {
-                final List<T> ts = getEntities.get();
-                gson.fromJson(ts, genericDeclaration);
-
-
-                return;
+    protected Pair<Integer, String> doGet(HttpExchange exchange) {
+        try {
+            final Integer id = getParametrId(exchange);
+            final String json = (id == null) ? getJsonEntities() : getJsonEntities(id);
+            if(json == null){
+                return new Pair<>(HttpURLConnection.HTTP_NO_CONTENT, "");
             }
-
-        } else if ("POST".equals(requestMethod)) {
-            doPost(exchange);
-        } else if("DELETE".equals(requestMethod)) {
-            doDelete(exchange);
-        } else {
-            exchange.sendResponseHeaders(405, 0);
+            return new Pair<>(HttpURLConnection.HTTP_OK, json);
+        } catch (Exception ex){
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+        }
+    }
+    @Override
+    protected Pair<Integer, String> doDelete(HttpExchange exchange) {
+        try {
+            final Map<String, String> queriedToMap = queryToMap(exchange.getRequestURI().getQuery());
+            final Integer id = getParametrId(exchange);
+            if(id == null && queriedToMap != null && !queriedToMap.isEmpty()){
+                return new Pair<>(HttpURLConnection.HTTP_BAD_METHOD, "");
+            }
+            if(id != null && id < 1) {
+                return new Pair<>(HttpURLConnection.HTTP_NOT_FOUND, "");
+            }
+            if(id == null) {
+                deleteEntities();
+            } else {
+                deleteEntities(id);
+            }
+            return new Pair<>(HttpURLConnection.HTTP_OK, "");
+        } catch (Exception ex){
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
     }
 
-    private void doGet(HttpExchange exchange) {
+    @Override
+    protected Pair<Integer, String> doPost(HttpExchange exchange) {
+        try {
+            final Map<String, String> queriedToMap = queryToMap(exchange.getRequestURI().getQuery());
+            if(queriedToMap != null && !queriedToMap.isEmpty()){
+                return new Pair<>(HttpURLConnection.HTTP_BAD_METHOD, "");
+            }
 
+            Integer id = null;
+            try{
+                return handlePost(exchange);
+            } catch (IOException ex) {
+                return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+            }
+
+        } catch (Exception ex){
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+        }
+    }
+
+    private Pair<Integer, String> handlePost(HttpExchange exchange) throws IOException {
+        final byte[] bytes = exchange.getRequestBody().readAllBytes();
+        final String s = new String(bytes, StandardCharsets.UTF_8);
+        final Task task = gson.fromJson(s, Task.class);
+        if(task == null) {
+            throw new IOException();
+        }
+        if(task.getId() == null){
+            return createEntity(task);
+        }
+        return updateEntity(task);
+    }
+
+    private Pair<Integer, String> updateEntity(Task task) {
+        return null;
+    }
+
+    private Pair<Integer, String> createEntity(Task task) {
+        return null;
+    }
+
+    private Integer getIdFromBody(HttpExchange exchange) throws IOException {
+        final byte[] bytes = exchange.getRequestBody().readAllBytes();
+        final String s = new String(bytes, StandardCharsets.UTF_8);
+        final Task task = gson.fromJson(s, Task.class);
+        if(task == null) {
+            return null;
+        }
+        return task.getId();
+    }
+
+    protected void deleteEntities() {
+        manager.deleteTasks();
+    }
+    protected void deleteEntities(int id) {
+        manager.deleteTask(id);
+    }
+    @Override
+    protected String getJsonEntities() {
+        final List<Task> tasks = manager.getTasks();
+        if(tasks == null) {
+            return null;
+        }
+        return gson.toJson(tasks);
     }
 
 }
-/*
-
- */

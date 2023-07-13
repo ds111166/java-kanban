@@ -1,14 +1,11 @@
 package server.handler;
+import com.sun.net.httpserver.HttpExchange;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class HandlerUtilities {
-    /**
-     *  Разбирает строку вида "parametr1=value1&parametr2=value2&parametr3=value3..."
-     *  в Map<String, String>, где ключ: имя парамера, значение: значение параметра
-     *  HttpExchange httpExchange
-     *  String query = httpExchange.getRequestURI().getQuery()
-     */
+
     public static Map<String, String> queryToMap(String query) {
         if (query == null) {
             return null;
@@ -23,5 +20,16 @@ public class HandlerUtilities {
             }
         }
         return result;
+    }
+
+    protected static Integer getParametrId(HttpExchange exchange) {
+        try {
+            final String requestQuery = exchange.getRequestURI().getQuery();
+            final Map<String, String> parametrs = queryToMap(requestQuery);
+            final String strId = parametrs.get("id");
+            return Integer.parseInt(strId);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

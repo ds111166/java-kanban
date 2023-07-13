@@ -44,7 +44,6 @@ public class InMemoryTaskManager implements TaskManager {
             if (TaskType.TASK == task.getType()) {
                 prioritizedTasks.remove(id);
                 iterator.remove();
-
             }
         }
     }
