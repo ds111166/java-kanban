@@ -14,9 +14,7 @@ import java.util.Map;
 
 import static server.handler.HandlerUtilities.getParametrId;
 import static server.handler.HandlerUtilities.queryToMap;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+
 
 
 public class TaskHandler extends TasksHandler {
@@ -85,32 +83,26 @@ public class TaskHandler extends TasksHandler {
         final String s = new String(bytes, StandardCharsets.UTF_8);
         final Task task = gson.fromJson(s, Task.class);
         if(task == null) {
-            throw new IOException();
+            return new Pair<>(HttpURLConnection.HTTP_BAD_METHOD, "");
         }
         if(task.getId() == null){
             return createEntity(task);
         }
         return updateEntity(task);
     }
-
-    private Pair<Integer, String> updateEntity(Task task) {
-        return null;
+    protected Pair<Integer, String> updateEntity(Task task) {
+        manager.updateTask(task);
+        return new Pair<>(HttpURLConnection.HTTP_OK, "");
     }
-
-    private Pair<Integer, String> createEntity(Task task) {
-        return null;
-    }
-
-    private Integer getIdFromBody(HttpExchange exchange) throws IOException {
-        final byte[] bytes = exchange.getRequestBody().readAllBytes();
-        final String s = new String(bytes, StandardCharsets.UTF_8);
-        final Task task = gson.fromJson(s, Task.class);
-        if(task == null) {
-            return null;
+    protected Pair<Integer, String> createEntity(Task task) {
+        final Integer id = manager.createTask(task);
+        if(id == null) {
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
-        return task.getId();
+        task.setId(id);
+        final String json = gson.toJson(task);
+        return new Pair<>(HttpURLConnection.HTTP_CREATED, json);
     }
-
     protected void deleteEntities() {
         manager.deleteTasks();
     }
