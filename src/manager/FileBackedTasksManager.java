@@ -16,6 +16,10 @@ import java.util.Set;
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private final File taskStore;
 
+    public FileBackedTasksManager() {
+        taskStore = new File("./resources/task.csv");
+    }
+
     public FileBackedTasksManager(File taskStore) {
         this.taskStore = taskStore;
     }
@@ -31,49 +35,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(new FileInputStream(taskStore), StandardCharsets.UTF_8))
         ) {
-            String line;
-            reader.readLine();
-            Set<Integer> idsSubtatsk = new HashSet<>();
-            Set<Integer> idsEpic = new HashSet<>();
-            while ((line = reader.readLine()) != null) {
-                if (!line.isEmpty()) {
-                    final Task task = CSVTaskFormat.taskFromString(line);
-                    final int id = task.getId();
-                    if (id > fileManager.generatorId) {
-                        fileManager.generatorId = id;
-                    }
-                    fileManager.tasks.put(id, task);
-
-                    final TaskType taskType = task.getType();
-                    if (taskType == TaskType.EPIC) {
-                        idsEpic.add(id);
-                    }
-                    if (taskType == TaskType.SUBTASK) {
-                        idsSubtatsk.add(task.getId());
-                    }
-                } else {
-                    line = reader.readLine();
-                    for (final Integer id : CSVTaskFormat.historyFromString(line)) {
-                        if (fileManager.tasks.containsKey(id)) {
-                            fileManager.history.add(fileManager.tasks.get(id));
-                        }
-                    }
-                }
-            }
-            for (Integer idSubtask : idsSubtatsk) {
-                Subtask subtask = (Subtask) fileManager.tasks.get(idSubtask);
-                final int epicId = subtask.getEpicId();
-                Epic basicEpic = fileManager.getEpic(epicId);
-                if (basicEpic == null) {
-                    continue;
-                }
-                basicEpic.addSubtaskId(idSubtask);
-            }
-            for (Integer id : idsEpic) {
-                fileManager.updateEpic(id);
-            }
-            fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.prioritizedTasks::add);
-
+            fillingData(reader, fileManager);
             return fileManager;
         } catch (IOException e) {
             throw new ManagerSaveException("Can't read from file: " + taskStore.getName(), e);
@@ -199,6 +161,51 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         } catch (IOException e) {
             throw new ManagerSaveException("Can't save to file: " + taskStore.getName(), e);
         }
+    }
+
+    protected static void fillingData(BufferedReader reader, FileBackedTasksManager fileManager) throws IOException {
+        String line;
+        reader.readLine();
+        Set<Integer> idsSubtatsk = new HashSet<>();
+        Set<Integer> idsEpic = new HashSet<>();
+        while ((line = reader.readLine()) != null) {
+            if (!line.isEmpty()) {
+                final Task task = CSVTaskFormat.taskFromString(line);
+                final int id = task.getId();
+                if (id > fileManager.generatorId) {
+                    fileManager.generatorId = id;
+                }
+                fileManager.tasks.put(id, task);
+
+                final TaskType taskType = task.getType();
+                if (taskType == TaskType.EPIC) {
+                    idsEpic.add(id);
+                }
+                if (taskType == TaskType.SUBTASK) {
+                    idsSubtatsk.add(task.getId());
+                }
+            } else {
+                line = reader.readLine();
+                for (final Integer id : CSVTaskFormat.historyFromString(line)) {
+                    if (fileManager.tasks.containsKey(id)) {
+                        fileManager.history.add(fileManager.tasks.get(id));
+                    }
+                }
+            }
+        }
+        for (Integer idSubtask : idsSubtatsk) {
+            Subtask subtask = (Subtask) fileManager.tasks.get(idSubtask);
+            final int epicId = subtask.getEpicId();
+            Epic basicEpic = fileManager.getEpic(epicId);
+            if (basicEpic == null) {
+                continue;
+            }
+            basicEpic.addSubtaskId(idSubtask);
+        }
+        for (Integer id : idsEpic) {
+            fileManager.updateEpic(id);
+        }
+        fileManager.tasks.values().stream().map(Task::getId).forEach(fileManager.prioritizedTasks::add);
     }
 
 }

@@ -5,7 +5,7 @@ import manager.TaskManager;
 
 import java.util.List;
 
-public class HistoryHandler extends TasksHandler{
+public class HistoryHandler extends TasksHandler {
 
     public HistoryHandler(TaskManager manager) {
         super(manager);
@@ -14,7 +14,7 @@ public class HistoryHandler extends TasksHandler{
     @Override
     protected String getJsonEntities() {
         final List<Task> tasks = manager.getHistory();
-        if(tasks == null) {
+        if (tasks == null) {
             return null;
         }
         return gson.toJson(tasks);

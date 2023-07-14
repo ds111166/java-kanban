@@ -18,6 +18,7 @@ import java.util.List;
 public class TasksHandler implements HttpHandler {
     protected final TaskManager manager;
     protected final Gson gson;
+
     public TasksHandler(TaskManager manager) {
         this.manager = manager;
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -61,25 +62,26 @@ public class TasksHandler implements HttpHandler {
     protected Pair<Integer, String> doGet(HttpExchange exchange) {
         try {
             String json = getJsonEntities();
-            if(json == null) {
+            if (json == null) {
                 return new Pair<>(HttpURLConnection.HTTP_NO_CONTENT, "");
             }
             return new Pair<>(HttpURLConnection.HTTP_OK, json);
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
     }
 
-     protected String getJsonEntities() {
-         final List<Task> tasks = manager.getPrioritizedTasks();
-         if(tasks == null) {
-             return null;
-         }
-         return gson.toJson(tasks);
-     }
-    protected String getJsonEntities(int id){
+    protected String getJsonEntities() {
+        final List<Task> tasks = manager.getPrioritizedTasks();
+        if (tasks == null) {
+            return null;
+        }
+        return gson.toJson(tasks);
+    }
+
+    protected String getJsonEntities(int id) {
         final Task task = manager.getTask(id);
-        if(task == null) {
+        if (task == null) {
             return null;
         }
         return gson.toJson(task);

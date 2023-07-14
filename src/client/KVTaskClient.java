@@ -11,23 +11,28 @@ public class KVTaskClient {
     private final HttpClient client;
     private final String url;
 
-    public KVTaskClient(String url){
+    public KVTaskClient(String url) {
         this.url = url;
         this.client = HttpClient.newBuilder().build();
         String apiToken = register();
         this.apiToken = (apiToken == null) ? "" : apiToken;
     }
 
+    public String getApiToken() {
+        return apiToken;
+    }
+
     public void put(String key, String json) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/save/"+key+"?API_TOKEN="+apiToken))
+                .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
         send(request);
     }
+
     public String load(String key) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/load/"+key+"?API_TOKEN="+apiToken))
+                .uri(URI.create(url + "/load/" + key + "?API_TOKEN=" + apiToken))
                 .GET()
                 .build();
         return send(request);
@@ -40,12 +45,13 @@ public class KVTaskClient {
                 .build();
         return send(request);
     }
-    private String send(HttpRequest request){
-        try{
+
+    private String send(HttpRequest request) {
+        try {
             return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-        }catch(InterruptedException | IOException ex) {
+        } catch (InterruptedException | IOException ex) {
             System.out.println("При выполнении запроса возникла исключительная ситуаци:\n"
-                    +ex.getMessage());
+                    + ex.getMessage());
             return null;
         }
 

@@ -1,30 +1,30 @@
 package server.handler;
 
-import entities.Task;
 import entities.Epic;
+import entities.Task;
 import javafx.util.Pair;
 import manager.TaskManager;
 
 import java.net.HttpURLConnection;
 import java.util.List;
 
-public class EpicHandler extends TaskHandler{
+public class EpicHandler extends TaskHandler {
     public EpicHandler(TaskManager manager) {
         super(manager);
     }
 
     @Override
     protected Pair<Integer, String> updateEntity(Task task) {
-        Epic updateEpic = (Epic)task;
+        Epic updateEpic = (Epic) task;
         manager.updateEpic(updateEpic);
         return new Pair<>(HttpURLConnection.HTTP_OK, "");
     }
 
     @Override
     protected Pair<Integer, String> createEntity(Task task) {
-        Epic newEpic = (Epic)task;
+        Epic newEpic = (Epic) task;
         final Integer id = manager.createEpic(newEpic);
-        if(id == null) {
+        if (id == null) {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
         newEpic.setId(id);
@@ -45,7 +45,7 @@ public class EpicHandler extends TaskHandler{
     @Override
     protected String getJsonEntities() {
         final List<Epic> epics = manager.getEpics();
-        if(epics == null) {
+        if (epics == null) {
             return null;
         }
         return gson.toJson(epics);
@@ -54,7 +54,7 @@ public class EpicHandler extends TaskHandler{
     @Override
     protected String getJsonEntities(int id) {
         final Epic epic = manager.getEpic(id);
-        if(epic == null) {
+        if (epic == null) {
             return null;
         }
         return gson.toJson(epic);

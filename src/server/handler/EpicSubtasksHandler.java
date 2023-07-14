@@ -2,7 +2,6 @@ package server.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import entities.Subtask;
-import entities.Task;
 import javafx.util.Pair;
 import manager.TaskManager;
 
@@ -20,23 +19,23 @@ public class EpicSubtasksHandler extends TasksHandler {
     protected Pair<Integer, String> doGet(HttpExchange exchange) {
         try {
             final Integer parametrId = getParametrId(exchange);
-            if(parametrId == null){
+            if (parametrId == null) {
                 return new Pair<>(HttpURLConnection.HTTP_BAD_REQUEST, "");
             }
             String json = getJsonEntities(parametrId);
-            if(json == null) {
+            if (json == null) {
                 return new Pair<>(HttpURLConnection.HTTP_NO_CONTENT, "");
             }
             return new Pair<>(HttpURLConnection.HTTP_OK, json);
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
     }
 
     @Override
-    protected String getJsonEntities(int epicId){
+    protected String getJsonEntities(int epicId) {
         final List<Subtask> epicSubtasks = manager.getEpicSubtasks(epicId);
-        if(epicSubtasks == null){
+        if (epicSubtasks == null) {
             return null;
         }
         return gson.toJson(epicSubtasks);
