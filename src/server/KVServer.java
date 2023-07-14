@@ -33,8 +33,43 @@ public class KVServer {
         server.createContext("/load", this::load);
     }
 
-    private void load(HttpExchange h) {
+    private void load(HttpExchange h) throws IOException {
         // TODO Добавьте получение значения по ключу
+        try {
+            System.out.println("\n/load");
+            if (!hasAuth(h)) {
+                System.out.println("Запрос неавторизован, нужен параметр в query API_TOKEN со значением апи-ключа");
+                h.sendResponseHeaders(403, 0);
+                return;
+            }
+            if ("GET".equals(h.getRequestMethod())) {
+                String key = h.getRequestURI().getPath().substring("/save/".length());
+                if (key.isEmpty()) {
+                    System.out.println("Key для получения данных пустой. key указывается в пути: /load/{key}");
+                    h.sendResponseHeaders(400, 0);
+                    return;
+                }
+                if(!data.containsKey(key)){
+                    System.out.println("В хранилище отсутствует ключ: " + key);
+                    h.sendResponseHeaders(400, 0);
+                    return;
+                }
+                String value = data.get(key);
+                if (value==null) {
+                    System.out.println("Для ключа: " + key + " отсутствуют данные!");
+                    h.sendResponseHeaders(400, 0);
+                    return;
+                }
+                sendText(h, value);
+                System.out.println("Данные для ключа " + key + " успешно получены!");
+                h.sendResponseHeaders(200, 0);
+            } else {
+                System.out.println("/load ждёт GET-запрос, а получил: " + h.getRequestMethod());
+                h.sendResponseHeaders(405, 0);
+            }
+        } finally {
+            h.close();
+        }
     }
 
     private void save(HttpExchange h) throws IOException {
