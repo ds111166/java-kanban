@@ -17,13 +17,14 @@ public class HttpTaskServer {
 
     public HttpTaskServer() throws IOException {
         this.manager = new FileBackedTasksManager(FILE);
-        server = HttpServer.create(new InetSocketAddress(PORT), 0);
-        server.createContext("/tasks/", new TasksHandler(manager));
-        server.createContext("/tasks/task/", new TaskHandler(manager));
-        server.createContext("/tasks/epic/", new EpicHandler(manager));
-        server.createContext("/tasks/subtask/", new SubtaskHandler(manager));
-        server.createContext("/tasks/history/", new HistoryHandler(manager));
-        server.createContext("/tasks/subtask/epic/", new EpicSubtasksHandler(manager));
+        this.server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        initContext();
+    }
+
+    public HttpTaskServer(TaskManager manager) throws IOException {
+        this.manager = manager;
+        this.server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        initContext();
     }
 
     public void start() {
@@ -32,5 +33,14 @@ public class HttpTaskServer {
 
     public void stop() {
         server.stop(1);
+    }
+
+    private void initContext() {
+        server.createContext("/tasks/", new TasksHandler(manager));
+        server.createContext("/tasks/task/", new TaskHandler(manager));
+        server.createContext("/tasks/epic/", new EpicHandler(manager));
+        server.createContext("/tasks/subtask/", new SubtaskHandler(manager));
+        server.createContext("/tasks/history/", new HistoryHandler(manager));
+        server.createContext("/tasks/subtask/epic/", new EpicSubtasksHandler(manager));
     }
 }

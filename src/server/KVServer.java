@@ -119,6 +119,7 @@ public class KVServer {
         }
     }
 
+
     public void start() {
         System.out.println("Запускаем сервер на порту " + PORT);
         System.out.println("Открой в браузере http://localhost:" + PORT + "/");
@@ -145,4 +146,5 @@ public class KVServer {
         h.sendResponseHeaders(200, resp.length);
         h.getResponseBody().write(resp);
     }
+
 }

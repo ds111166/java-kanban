@@ -166,7 +166,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     protected static void fillingData(BufferedReader reader, FileBackedTasksManager fileManager) throws IOException {
         String line;
         reader.readLine();
-        Set<Integer> idsSubtatsk = new HashSet<>();
+        Set<Integer> idsSubtask = new HashSet<>();
         Set<Integer> idsEpic = new HashSet<>();
         while ((line = reader.readLine()) != null) {
             if (!line.isEmpty()) {
@@ -182,7 +182,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     idsEpic.add(id);
                 }
                 if (taskType == TaskType.SUBTASK) {
-                    idsSubtatsk.add(task.getId());
+                    idsSubtask.add(task.getId());
                 }
             } else {
                 line = reader.readLine();
@@ -193,7 +193,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 }
             }
         }
-        for (Integer idSubtask : idsSubtatsk) {
+        for (Integer idSubtask : idsSubtask) {
             Subtask subtask = (Subtask) fileManager.tasks.get(idSubtask);
             final int epicId = subtask.getEpicId();
             Epic basicEpic = fileManager.getEpic(epicId);

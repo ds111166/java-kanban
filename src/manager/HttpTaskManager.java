@@ -4,55 +4,66 @@ package manager;
 import client.KVTaskClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import entities.Task;
-import manager.exceptions.ManagerSaveException;
-import manager.utilities.CSVTaskFormat;
+import manager.utilities.LocalDateTimeAdapter;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public class HttpTaskManager extends FileBackedTasksManager {
+    static class PackData {
+        Map<Integer, Task> packTasks;
+        List<Task> packHistory;
+
+        public PackData(Map<Integer, Task> packTasks, List<Task> packHistory) {
+            this.packTasks = packTasks;
+            this.packHistory = packHistory;
+        }
+    }
+
     private final static String KEY = "HttpTaskManager";
     private final KVTaskClient client;
     private final Gson gson;
 
     public HttpTaskManager(String url) {
         this.client = new KVTaskClient(url);
-        this.gson = new GsonBuilder().create();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .create();
         load();
     }
 
     @Override
     protected void save() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(CSVTaskFormat.getHeader()).append("\n");
-        for (final Task task : super.tasks.values()) {
-            sb.append(CSVTaskFormat.toString(task))
-                    .append("\n");
-        }
-        sb.append("\n");
-        sb.append(CSVTaskFormat.historyToString(super.history));
-        sb.append("\n");
-        client.put(KEY, gson.toJson(sb.toString()));
+        PackData packData = new PackData(tasks, history.getHistory());
+        Type packingDataType = new TypeToken<PackData>() {
+        }.getType();
+        String json = gson.toJson(packData, packingDataType);
+        client.put(KEY, json);
     }
 
     private void load() {
-        final String data = gson.fromJson(client.load(KEY), String.class);
+        String data = client.load(KEY);
         if (data == null) {
             return;
         }
-        final byte[] bytesData = data.getBytes(StandardCharsets.UTF_8);
-        try (
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(new ByteArrayInputStream(bytesData)))
-        ) {
-            FileBackedTasksManager.fillingData(reader, this);
-        } catch (IOException e) {
-            throw new ManagerSaveException("Can't read the data from the server", e);
+        Type packingDataType = new TypeToken<PackData>() {
+        }.getType();
+        PackData packingData = gson.fromJson(data, packingDataType);
+        if (packingData == null) {
+            return;
         }
+        generatorId = -1;
+        packingData.packTasks.forEach((id, task) -> {
+            if (id > generatorId) {
+                generatorId = id;
+            }
+            tasks.put(id, task);
+        });
+        prioritizedTasks.addAll(tasks.keySet());
+        packingData.packHistory.forEach(history::add);
     }
 }

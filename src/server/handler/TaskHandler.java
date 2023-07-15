@@ -65,8 +65,6 @@ public class TaskHandler extends TasksHandler {
             if (queriedToMap != null && !queriedToMap.isEmpty()) {
                 return new Pair<>(HttpURLConnection.HTTP_BAD_METHOD, "");
             }
-
-            Integer id = null;
             try {
                 return handlePost(exchange);
             } catch (IOException ex) {

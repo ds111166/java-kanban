@@ -4,16 +4,26 @@ import entities.Subtask;
 import entities.Task;
 import manager.TaskManager;
 import manager.utilities.Managers;
+import server.HttpTaskServer;
+import server.KVServer;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 public class Main {
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        KVServer server;
+        server = new KVServer();
+        server.start();
         TaskManager taskManager = Managers.getDefault();
-
-        Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\""));
+        HttpTaskServer httpTaskServer = new HttpTaskServer(taskManager);
+        httpTaskServer.start();
+        LocalDateTime startTime = LocalDateTime.parse("2001-10-02T10:11:01");
+        Integer taskId1 = taskManager.createTask(new Task("Задача 1", "Это \"Задача 1\"", 12, startTime));
         Integer taskId2 = taskManager.createTask(new Task("Задача 2", "Это \"Задача 2\""));
         Integer taskId3 = taskManager.createTask(new Task("Задача 3", "Это \"Задача 3\""));
         Integer taskId4 = taskManager.createTask(new Task("Задача 4", "Это \"Задача 4\""));

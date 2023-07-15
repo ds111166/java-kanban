@@ -18,13 +18,9 @@ public class KVTaskClient {
         this.apiToken = (apiToken == null) ? "" : apiToken;
     }
 
-    public String getApiToken() {
-        return apiToken;
-    }
-
     public void put(String key, String json) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
+                .uri(URI.create(url + "save/" + key + "?API_TOKEN=" + apiToken))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
         send(request);
@@ -32,7 +28,7 @@ public class KVTaskClient {
 
     public String load(String key) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/load/" + key + "?API_TOKEN=" + apiToken))
+                .uri(URI.create(url + "load/" + key + "?API_TOKEN=" + apiToken))
                 .GET()
                 .build();
         return send(request);
@@ -40,7 +36,7 @@ public class KVTaskClient {
 
     private String register() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/register"))
+                .uri(URI.create(url + "register/"))
                 .GET()
                 .build();
         return send(request);

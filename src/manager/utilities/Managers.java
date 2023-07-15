@@ -1,6 +1,6 @@
 package manager.utilities;
 
-import manager.InMemoryTaskManager;
+import manager.HttpTaskManager;
 import manager.TaskManager;
 import manager.history.HistoryManager;
 import manager.history.InMemoryHistoryManager;
@@ -12,7 +12,7 @@ public class Managers {
      * @return - менеджер задач
      */
     public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+        return new HttpTaskManager("http://localhost:8078/");
     }
 
     /**
