@@ -92,10 +92,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Subtask> getSubtasks() {
-        return tasks.values()
+       /* return tasks.values()
                 .stream().filter(task -> task.getType() == TaskType.SUBTASK)
                 .map(task -> (Subtask) cloneTask(task))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+        List<Subtask> subtasks = new ArrayList<>();
+        for (Task task : tasks.values()) {
+            if (task.getType() == TaskType.SUBTASK) {
+                Subtask subtask = (Subtask) cloneTask(task);
+                subtasks.add(subtask);
+            }
+        }
+        return subtasks;
     }
 
     @Override

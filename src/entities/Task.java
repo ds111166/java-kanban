@@ -5,6 +5,8 @@ import java.util.Objects;
 
 public class Task {
 
+    protected TaskType type;
+
     protected Integer id;
     protected String name;
     protected String description;
@@ -16,13 +18,15 @@ public class Task {
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
+        this.type = getClassType();
     }
 
     public Task(String name, String description, int duration, LocalDateTime startTime) {
         this.name = name;
         this.description = description;
         this.duration = duration;
-        this.startTime = startTime;//samplingMomentTime(startTime);
+        this.startTime = startTime;
+        this.type = getClassType();
     }
 
     public Task(String name, String description, Status status, int duration, LocalDateTime startTime) {
@@ -30,7 +34,8 @@ public class Task {
         this.description = description;
         this.status = status;
         this.duration = duration;
-        this.startTime = startTime;//samplingMomentTime(startTime);
+        this.startTime = startTime;
+        this.type = getClassType();
     }
 
     public Task(Integer id, String name, String description, Status status, int duration, LocalDateTime startTime) {
@@ -39,16 +44,20 @@ public class Task {
         this.description = description;
         this.status = status;
         this.duration = duration;
-        this.startTime = startTime;//samplingMomentTime(startTime);
+        this.startTime = startTime;
+        this.type = getClassType();
     }
+
 
     public Task(Task another) {
         this.id = another.id;
         this.name = another.name;
+        this.type = another.getType();
         this.description = another.description;
         this.status = another.status;
         this.duration = another.duration;
-        this.startTime = another.startTime;//samplingMomentTime(another.startTime);
+        this.startTime = another.startTime;
+
     }
 
     public Status getStatus() {
@@ -84,7 +93,7 @@ public class Task {
     }
 
     public TaskType getType() {
-        return TaskType.TASK;
+        return type;
     }
 
     public long getDuration() {
@@ -148,19 +157,13 @@ public class Task {
         return startTime.plusMinutes(duration);
     }
 
-   /*
-    protected LocalDateTime samplingMomentTime(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return null;
+    private TaskType getClassType() {
+        if (this.getClass().equals(Epic.class)) {
+            return TaskType.EPIC;
+        } else if (this.getClass().equals(Subtask.class)) {
+            return TaskType.SUBTASK;
         }
-        return LocalDateTime.of(dateTime.getYear()
-                , dateTime.getMonth()
-                , dateTime.getDayOfMonth()
-                , dateTime.getHour()
-                , dateTime.getMinute());
+        return TaskType.TASK;
     }
-    */
-
-
 }
 

@@ -111,9 +111,9 @@ public class CSVTaskFormat {
             case TASK:
                 return new Task(task);
             case SUBTASK:
-                return new Subtask(((Subtask) task));
+                return new Subtask((Subtask) task);
             case EPIC:
-                return new Epic(((Epic) task));
+                return new Epic((Epic) task);
             default:
                 return null;
         }

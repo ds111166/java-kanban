@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Epic extends Task {
+
     private List<Integer> subtaskIds;
     protected LocalDateTime endTime;
 
@@ -27,11 +28,11 @@ public class Epic extends Task {
     }
 
 
-    @Override
-    public TaskType getType() {
-        return TaskType.EPIC;
-    }
-
+    /* @Override
+     public TaskType getType() {
+         return type;
+     }
+ */
     public List<Integer> getSubtaskIds() {
         return subtaskIds;
     }

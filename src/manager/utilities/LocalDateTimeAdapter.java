@@ -13,6 +13,7 @@ import java.util.Date;
 public class LocalDateTimeAdapter extends TypeAdapter<LocalDateTime> {
     @Override
     public LocalDateTime read(JsonReader in) throws IOException {
+
         try {
             long aLong = in.nextLong();
             Instant instant = Instant.ofEpochMilli(aLong);

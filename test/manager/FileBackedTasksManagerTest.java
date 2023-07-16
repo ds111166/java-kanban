@@ -46,7 +46,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
     void loadFromFileTest() {
 
         FileBackedTasksManager fileBackedTasksManager = FileBackedTasksManager.loadFromFile(FILE);
-
+        List<Task> tasks = fileBackedTasksManager.getTasks();
         final List<Integer> tasksIds = fileBackedTasksManager.getTasks()
                 .stream().map(Task::getId).collect(Collectors.toList());
         assertTrue(tasksIds.size() == 3

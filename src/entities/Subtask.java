@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
  * @author ds111166
  */
 public class Subtask extends Task {
+
     private int epicId;
 
     public Subtask(int epicId, String title, String description) {
@@ -36,10 +37,10 @@ public class Subtask extends Task {
         this.epicId = epicId;
     }
 
-    @Override
+    /*@Override
     public TaskType getType() {
         return TaskType.SUBTASK;
-    }
+    }*/
 
 
     @Override
