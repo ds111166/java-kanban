@@ -1,7 +1,11 @@
 package server.handler;
 
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
+import entities.Epic;
+import entities.Subtask;
 import entities.Task;
 import javafx.util.Pair;
 import manager.TaskManager;
@@ -28,11 +32,11 @@ public class TaskHandler extends TasksHandler {
             final Integer id = getParametrId(exchange);
             final String json = (id == null) ? getJsonEntities() : getJsonEntities(id);
             if (json == null) {
-                return new Pair<>(HttpURLConnection.HTTP_NO_CONTENT, "");
+                return new Pair<>(HttpURLConnection.HTTP_NOT_FOUND, "");
             }
             return new Pair<>(HttpURLConnection.HTTP_OK, json);
         } catch (Exception ex) {
-            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, gson.toJson(ex.getStackTrace()));
         }
     }
 
@@ -54,7 +58,7 @@ public class TaskHandler extends TasksHandler {
             }
             return new Pair<>(HttpURLConnection.HTTP_OK, "");
         } catch (Exception ex) {
-            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, gson.toJson(ex.getStackTrace()));
         }
     }
 
@@ -68,25 +72,36 @@ public class TaskHandler extends TasksHandler {
             try {
                 return handlePost(exchange);
             } catch (IOException ex) {
-                return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+                return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, gson.toJson(ex.getStackTrace()));
             }
 
         } catch (Exception ex) {
-            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
+            return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, gson.toJson(ex.getStackTrace()));
         }
     }
 
     private Pair<Integer, String> handlePost(HttpExchange exchange) throws IOException {
         final byte[] bytes = exchange.getRequestBody().readAllBytes();
         final String s = new String(bytes, StandardCharsets.UTF_8);
-        final Task task = gson.fromJson(s, Task.class);
+        Task task = gson.fromJson(s, Task.class);
         if (task == null) {
             return new Pair<>(HttpURLConnection.HTTP_BAD_METHOD, "");
         }
+        task = parseTask(s);
         if (task.getId() == null) {
             return createEntity(task);
         }
         return updateEntity(task);
+    }
+
+    private Task parseTask(String json ){
+        final Map<String, JsonElement> map = JsonParser.parseString(json).getAsJsonObject().asMap();
+        final String type = map.get("type").getAsString();
+        switch(type){
+            case "EPIC" : return gson.fromJson(json, Epic.class);
+            case "SUBTASK" : return gson.fromJson(json, Subtask.class);
+            default: return gson.fromJson(json, Task.class);
+        }
     }
 
     protected Pair<Integer, String> updateEntity(Task task) {
@@ -100,7 +115,7 @@ public class TaskHandler extends TasksHandler {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
         task.setId(id);
-        final String json = gson.toJson(task);
+        final String json = gson.toJson(task.getId());
         return new Pair<>(HttpURLConnection.HTTP_CREATED, json);
     }
 

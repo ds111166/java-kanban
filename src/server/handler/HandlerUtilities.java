@@ -26,7 +26,11 @@ public class HandlerUtilities {
     protected static Integer getParametrId(HttpExchange exchange) {
         try {
             final String requestQuery = exchange.getRequestURI().getQuery();
+
             final Map<String, String> parametrs = queryToMap(requestQuery);
+            if(parametrs == null){
+                return null;
+            }
             final String strId = parametrs.get("id");
             return Integer.parseInt(strId);
         } catch (NumberFormatException ex) {

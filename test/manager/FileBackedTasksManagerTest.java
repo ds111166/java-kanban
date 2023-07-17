@@ -16,9 +16,10 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager> {
+public class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager> {
 
     final static File FILE = new File("./resources/task.csv");
+
 
     @BeforeEach
     @Override
@@ -110,6 +111,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
                         " не вызвано исключение с верным сообщением об ошибке");
 
     }
+
 
 
 }

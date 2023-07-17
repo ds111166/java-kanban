@@ -28,6 +28,8 @@ public class HttpTaskServer {
     }
 
     public void start() {
+        System.out.println("Запускаем сервер HttpTaskServer на порту " + PORT);
+        System.out.println("Открой в браузере http://localhost:" + PORT + "/");
         server.start();
     }
 

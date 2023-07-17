@@ -28,7 +28,7 @@ public class SubtaskHandler extends TaskHandler {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
         newSubtask.setId(id);
-        final String json = gson.toJson(newSubtask);
+        final String json = gson.toJson(newSubtask.getId());
         return new Pair<>(HttpURLConnection.HTTP_CREATED, json);
     }
 

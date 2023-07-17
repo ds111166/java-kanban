@@ -7,11 +7,13 @@ import com.sun.net.httpserver.HttpHandler;
 import entities.Task;
 import javafx.util.Pair;
 import manager.TaskManager;
+import manager.utilities.LocalDateTimeAdapter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -21,8 +23,9 @@ public class TasksHandler implements HttpHandler {
 
     public TasksHandler(TaskManager manager) {
         this.manager = manager;
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        this.gson = gsonBuilder.create();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .create();
     }
 
     @Override
@@ -44,10 +47,8 @@ public class TasksHandler implements HttpHandler {
         }
         final String response = result.getValue();
         exchange.sendResponseHeaders(result.getKey(), response.length());
-        if (!response.isEmpty()) {
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes(StandardCharsets.UTF_8));
-            }
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes(StandardCharsets.UTF_8));
         }
     }
 

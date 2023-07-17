@@ -15,6 +15,7 @@ import manager.utilities.LocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -73,9 +74,7 @@ public class HttpTaskManager extends FileBackedTasksManager {
         for (Integer id : tasks.keySet()) {
             prioritizedTasks.add(id);
         }
-        /*for (Integer id : tasks.keySet()) {
-            prioritizedTasks.add(id);
-        }*/
+
         CSVTaskFormat
                 .historyFromString(gson.fromJson(packData[1], String.class))
                 .stream()

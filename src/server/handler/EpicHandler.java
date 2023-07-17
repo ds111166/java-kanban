@@ -28,7 +28,7 @@ public class EpicHandler extends TaskHandler {
             return new Pair<>(HttpURLConnection.HTTP_INTERNAL_ERROR, "");
         }
         newEpic.setId(id);
-        final String json = gson.toJson(newEpic);
+        final String json = gson.toJson(newEpic.getId());
         return new Pair<>(HttpURLConnection.HTTP_CREATED, json);
     }
 

@@ -1,6 +1,7 @@
 package server.handler;
 
 import com.sun.net.httpserver.HttpExchange;
+import entities.Epic;
 import entities.Subtask;
 import javafx.util.Pair;
 import manager.TaskManager;
@@ -19,8 +20,13 @@ public class EpicSubtasksHandler extends TasksHandler {
     protected Pair<Integer, String> doGet(HttpExchange exchange) {
         try {
             final Integer parametrId = getParametrId(exchange);
+
             if (parametrId == null) {
                 return new Pair<>(HttpURLConnection.HTTP_BAD_REQUEST, "");
+            }
+            final Epic epic = manager.getEpic(parametrId);
+            if(epic == null) {
+                return new Pair<>(HttpURLConnection.HTTP_NOT_FOUND, "");
             }
             String json = getJsonEntities(parametrId);
             if (json == null) {
@@ -40,4 +46,5 @@ public class EpicSubtasksHandler extends TasksHandler {
         }
         return gson.toJson(epicSubtasks);
     }
+
 }
