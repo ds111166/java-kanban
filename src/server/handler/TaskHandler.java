@@ -94,13 +94,16 @@ public class TaskHandler extends TasksHandler {
         return updateEntity(task);
     }
 
-    private Task parseTask(String json ){
+    private Task parseTask(String json) {
         final Map<String, JsonElement> map = JsonParser.parseString(json).getAsJsonObject().asMap();
         final String type = map.get("type").getAsString();
-        switch(type){
-            case "EPIC" : return gson.fromJson(json, Epic.class);
-            case "SUBTASK" : return gson.fromJson(json, Subtask.class);
-            default: return gson.fromJson(json, Task.class);
+        switch (type) {
+            case "EPIC":
+                return gson.fromJson(json, Epic.class);
+            case "SUBTASK":
+                return gson.fromJson(json, Subtask.class);
+            default:
+                return gson.fromJson(json, Task.class);
         }
     }
 

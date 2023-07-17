@@ -1,24 +1,30 @@
 package server;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import entities.*;
-import manager.*;
+import manager.FileBackedTasksManager;
 import manager.utilities.LocalDateTimeAdapter;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class HttpTaskServerTest<T extends FileBackedTasksManager> {
     private static final String ADDR = "http://localhost:8080";
@@ -27,11 +33,12 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
     private Integer taskId1, taskId2, taskId3, epicId1, epicId2, epicId3;
     private Integer subId11, subId12, subId21, subId22, subId23, subId31;
 
-    private  HttpTaskServer server;
-    private  HttpClient client;
+    private HttpTaskServer server;
+    private HttpClient client;
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
+
     @BeforeEach
     public void createServerForTest() {
         taskManager = new FileBackedTasksManager();
@@ -46,14 +53,16 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         client = HttpClient.newHttpClient();
 
     }
+
     @AfterEach
     public void clearManagerForTest() {
         clearManager();
         server.stop();
     }
+
     @Test
-    void tasksEndpointTest () throws IOException, InterruptedException {
-        URI uri = URI.create(ADDR+"/tasks/");
+    void tasksEndpointTest() throws IOException, InterruptedException {
+        URI uri = URI.create(ADDR + "/tasks/");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString("rewrwe"))
@@ -77,15 +86,15 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> tasks = parseTasks(response.body());
         final List<Integer> tasksIds = tasks.stream()
-                .filter(task->task.getType()==TaskType.TASK)
+                .filter(task -> task.getType() == TaskType.TASK)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         final List<Integer> epicsIds = tasks.stream()
-                .filter(task->task.getType()==TaskType.EPIC)
+                .filter(task -> task.getType() == TaskType.EPIC)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         final List<Integer> subtasksIds = tasks.stream()
-                .filter(task->task.getType()==TaskType.SUBTASK)
+                .filter(task -> task.getType() == TaskType.SUBTASK)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         assertTrue(tasksIds.size() == 3
@@ -106,7 +115,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
 
     @Test
     void taskEndpointTest() throws IOException, InterruptedException {
-        URI uri = URI.create(ADDR+"/tasks/task/");
+        URI uri = URI.create(ADDR + "/tasks/task/");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .PUT(HttpRequest.BodyPublishers.ofString("qeqwe"))
@@ -119,21 +128,21 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> tasks = parseTasks(response.body());
         final List<Integer> tasksIds = tasks.stream()
-                .filter(task->task.getType()==TaskType.TASK)
+                .filter(task -> task.getType() == TaskType.TASK)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         assertTrue(tasksIds.size() == 3
                         & tasksIds.containsAll(Set.of(taskId1, taskId2, taskId3)),
                 "После загрузки с HttpServer'а список Задач имеет не верный размер и состав");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+taskId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + taskId2);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: "
                 + uri.getPath());
         final Task task = gson.fromJson(response.body(), Task.class);
-        assertEquals(task.getId(), taskId2, "Получена задача с неверным идентификатором " + task.getId() );
-        uri = URI.create(ADDR+uri.getPath()+"?id="+1000);
+        assertEquals(task.getId(), taskId2, "Получена задача с неверным идентификатором " + task.getId());
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + 1000);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(),
@@ -143,7 +152,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         //Создание задач
         Task newTask = new Task("task1", "this task1", 12,
                 LocalDateTime.parse("2222-10-02T10:11:01"));
-        uri = URI.create(ADDR+"/tasks/task/");
+        uri = URI.create(ADDR + "/tasks/task/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newTask)))
@@ -151,25 +160,25 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_CREATED, response.statusCode(),
                 "Ошибка при обработки запроса на создание задачи: "
-                + response.statusCode());
+                        + response.statusCode());
         final Integer newTaskId = gson.fromJson(response.body(), Integer.class);
         assertNotNull(newTaskId,
                 "При создании задачи возвращен пустой идентификатор");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newTaskId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newTaskId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Ошибка при обработки GET запроса созданной задачм: "
-                + uri.getPath());
+                        + uri.getPath());
         Task newTask1 = gson.fromJson(response.body(), Task.class);
 
         assertEquals(newTask1.getId(), newTaskId, "Получена созданная задача с неверным идентификатором "
-                + task.getId() );
+                + task.getId());
         //Обновление задач
         final Status status = newTask1.getStatus();
         newTask1.setStatus(Status.DONE);
-        uri = URI.create(ADDR+"/tasks/task/");
+        uri = URI.create(ADDR + "/tasks/task/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newTask1)))
@@ -178,27 +187,27 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Ошибка при обработки запроса на обновление задачи: "
                         + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newTaskId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newTaskId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Ошибка при обработки GET запроса созданной задачм: "
-                + uri.getPath());
+                        + uri.getPath());
         Task newTask2 = gson.fromJson(response.body(), Task.class);
         assertEquals(newTask2.getStatus(), Status.DONE, "Возвращена обновленная задача с неверным статусом: "
-                +newTask2.getStatus());
+                + newTask2.getStatus());
         //Удаление задач
-        uri = URI.create(ADDR+uri.getPath()+"?id="+taskId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + taskId2);
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при удалении задачи c id: "
                 + taskId2);
-        uri = URI.create(ADDR+uri.getPath()+"?id="+taskId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + taskId2);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(), "Ошибка при получении удаленной задачи: "
                 + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath());
+        uri = URI.create(ADDR + uri.getPath());
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "не верный код возврата при удалении всех задач: "
@@ -207,11 +216,12 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> delTasks = parseTasks(response.body());
-        assertEquals(delTasks.size(), 0, "После удаления всех задач получен не пустой список задач" );
+        assertEquals(delTasks.size(), 0, "После удаления всех задач получен не пустой список задач");
     }
+
     @Test
     void epicEndpointTest() throws IOException, InterruptedException {
-        URI uri = URI.create(ADDR+"/tasks/epic/");
+        URI uri = URI.create(ADDR + "/tasks/epic/");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .PUT(HttpRequest.BodyPublishers.ofString("qeqwe"))
@@ -224,21 +234,21 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> epics = parseTasks(response.body());
         final List<Integer> epicsIds = epics.stream()
-                .filter(task->task.getType()==TaskType.EPIC)
+                .filter(task -> task.getType() == TaskType.EPIC)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         assertTrue(epicsIds.size() == 3
                         & epicsIds.containsAll(Set.of(epicId1, epicId2, epicId3)),
                 "После загрузки с HttpServer'а список Эпиков имеет не верный размер и состав");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+epicId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + epicId2);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: "
                 + uri.getPath());
         final Epic epic = gson.fromJson(response.body(), Epic.class);
-        assertEquals(epic.getId(), epicId2, "Получен эпик с неверным идентификатором " + epic.getId() );
-        uri = URI.create(ADDR+uri.getPath()+"?id="+1000);
+        assertEquals(epic.getId(), epicId2, "Получен эпик с неверным идентификатором " + epic.getId());
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + 1000);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(),
@@ -247,7 +257,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
 
         //Создание эпика
         Epic newEpic = new Epic("epic33", "this epic33");
-        uri = URI.create(ADDR+"/tasks/epic/");
+        uri = URI.create(ADDR + "/tasks/epic/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newEpic)))
@@ -260,7 +270,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertNotNull(newEpicId,
                 "При создании эпика возвращен пустой идентификатор");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newEpicId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newEpicId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
@@ -269,11 +279,11 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         Epic newEpic1 = gson.fromJson(response.body(), Epic.class);
 
         assertEquals(newEpic1.getId(), newEpicId, "Получена созданный эпик с неверным идентификатором "
-                + newEpic1.getId() );
+                + newEpic1.getId());
         //Обновление эпика
         final String name = newEpic1.getName();
         newEpic1.setName(name + " new !");
-        uri = URI.create(ADDR+"/tasks/epic/");
+        uri = URI.create(ADDR + "/tasks/epic/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newEpic1)))
@@ -282,7 +292,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Ошибка при обработки запроса на обновление 'эпика': "
                         + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newEpicId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newEpicId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
@@ -290,19 +300,19 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
                         + uri.getPath());
         Epic newEpic2 = gson.fromJson(response.body(), Epic.class);
         assertEquals(newEpic2.getName(), name + " new !", "Возвращена обновленный эпик с неверным именем: "
-                +newEpic2.getName());
+                + newEpic2.getName());
         //Удаление эпика
-        uri = URI.create(ADDR+uri.getPath()+"?id="+epicId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + epicId2);
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при удалении эпика c id: "
                 + epicId2);
-        uri = URI.create(ADDR+uri.getPath()+"?id="+epicId2);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + epicId2);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(), "не верный код при получении удаленного эпика: "
                 + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath());
+        uri = URI.create(ADDR + uri.getPath());
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "не верный код возврата при удалении всех эпиков: "
@@ -311,12 +321,12 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> delEpics = parseTasks(response.body());
-        assertEquals(delEpics.size(), 0, "После удаления всех эпиков получен не пустой список эпиков" );
+        assertEquals(delEpics.size(), 0, "После удаления всех эпиков получен не пустой список эпиков");
     }
 
     @Test
     void subtaskEndpointTest() throws IOException, InterruptedException {
-        URI uri = URI.create(ADDR+"/tasks/subtask/");
+        URI uri = URI.create(ADDR + "/tasks/subtask/");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .PUT(HttpRequest.BodyPublishers.ofString("qeqwe"))
@@ -329,21 +339,21 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> subtasks = parseTasks(response.body());
         final List<Integer> subtasksIds = subtasks.stream()
-                .filter(task->task.getType()==TaskType.SUBTASK)
+                .filter(task -> task.getType() == TaskType.SUBTASK)
                 .map(Task::getId)
                 .collect(Collectors.toList());
         assertTrue(subtasksIds.size() == 6
                         & subtasksIds.containsAll(Set.of(subId11, subId12, subId21, subId22, subId23, subId31)),
                 "После загрузки с HttpServer'а список Подзадач имеет не верный размер и состав");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+subId22);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + subId22);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: "
                 + uri.getPath());
         final Subtask subtask = gson.fromJson(response.body(), Subtask.class);
-        assertEquals(subtask.getId(), subId22, "Получена подзадача с неверным идентификатором " + subtask.getId() );
-        uri = URI.create(ADDR+uri.getPath()+"?id="+1000);
+        assertEquals(subtask.getId(), subId22, "Получена подзадача с неверным идентификатором " + subtask.getId());
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + 1000);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(),
@@ -352,7 +362,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
 
         //Создание подзадачи
         Subtask newSubtask = new Subtask(epicId1, "subtask33", "this subtask33");
-        uri = URI.create(ADDR+"/tasks/subtask/");
+        uri = URI.create(ADDR + "/tasks/subtask/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newSubtask)))
@@ -365,7 +375,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertNotNull(newSubtaskId,
                 "При создании подзадачи возвращен пустой идентификатор");
 
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newSubtaskId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newSubtaskId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
@@ -373,12 +383,12 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
                         + uri.getPath());
         Subtask newSubtask1 = gson.fromJson(response.body(), Subtask.class);
         assertEquals(newSubtask1.getId(), newSubtaskId, "Получен созданная подзадача с неверным идентификатором "
-                + newSubtask1.getId() );
+                + newSubtask1.getId());
 
         //Обновление подзадач
         final String name = newSubtask1.getName();
         newSubtask1.setName(name + " new !");
-        uri = URI.create(ADDR+"/tasks/subtask/");
+        uri = URI.create(ADDR + "/tasks/subtask/");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(newSubtask1)))
@@ -387,7 +397,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Ошибка при обработки запроса на обновление подзадачи: "
                         + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath()+"?id="+newSubtaskId);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + newSubtaskId);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
@@ -395,19 +405,19 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
                         + uri.getPath());
         Subtask newSubtask2 = gson.fromJson(response.body(), Subtask.class);
         assertEquals(newSubtask2.getName(), name + " new !", "Возвращена обновленная подзадача с неверным именем: "
-                +newSubtask2.getName());
+                + newSubtask2.getName());
         //Удаление подзадачи
-        uri = URI.create(ADDR+uri.getPath()+"?id="+subId22);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + subId22);
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при удалении подзадачи c id: "
                 + subId22);
-        uri = URI.create(ADDR+uri.getPath()+"?id="+subId22);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + subId22);
         request = HttpRequest.newBuilder().uri(uri).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(), "не верный код при получении удаленной подзадачи: "
                 + response.statusCode());
-        uri = URI.create(ADDR+uri.getPath());
+        uri = URI.create(ADDR + uri.getPath());
         request = HttpRequest.newBuilder().uri(uri).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "не верный код возврата при удалении всех подзадач: "
@@ -416,12 +426,12 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при обработки GET запроса: " + uri.getPath());
         final List<Task> delSubtasks = parseTasks(response.body());
-        assertEquals(delSubtasks.size(), 0, "После удаления всех подзадач получен не пустой список подзадач" );
+        assertEquals(delSubtasks.size(), 0, "После удаления всех подзадач получен не пустой список подзадач");
     }
 
     @Test
     void epicSubtaskEndpointTest() throws IOException, InterruptedException {
-        URI uri = URI.create(ADDR+"/tasks/subtask/epic/");
+        URI uri = URI.create(ADDR + "/tasks/subtask/epic/");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -430,7 +440,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.statusCode(),
                 "Неверный статус обработки запроса на получения списка подзадач " +
                         "эпика без указания идентификатора: " + uri.getPath());
-        uri = URI.create(ADDR+uri.getPath()+"?id="+10000);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + 10000);
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -439,7 +449,7 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(),
                 "Неверный статус обработки запроса на получения списка подзадач " +
                         "эпика с неверным идентификатором: " + uri.getPath());
-        uri = URI.create(ADDR+uri.getPath()+"?id="+epicId1);
+        uri = URI.create(ADDR + uri.getPath() + "?id=" + epicId1);
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -448,7 +458,48 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
                 "Неверный статус обработки запроса на получения списка подзадач " +
                         "эпика с правильным идентификатором: " + uri.getPath());
+        final List<Task> subtasks = parseTasks(response.body());
+        final List<Integer> subtasksIds = subtasks.stream()
+                .filter(task -> task.getType() == TaskType.SUBTASK)
+                .map(Task::getId)
+                .collect(Collectors.toList());
+        assertTrue(subtasksIds.size() == 2
+                        & subtasksIds.containsAll(Set.of(subId11, subId12)),
+                "После загрузки по заданному идентификатору Эпика список Подзадач имеет не верный размер и состав");
+    }
 
+    @Test
+    void historyEndpointTest() throws IOException, InterruptedException {
+        URI uri = URI.create(ADDR + "/tasks/history/");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
+                "Неверный статус обработки запроса на получения списка истории" + uri.getPath());
+        final List<Task> task = parseTasks(response.body());
+        final List<Integer> taskIds = task.stream()
+                .map(Task::getId)
+                .collect(Collectors.toList());
+        assertTrue(taskIds.size() == 1 & taskIds.containsAll(Set.of(taskId3)),
+                "После загрузки список истории обращений к задачам имеет не верный размер и состав");
+        //Удаление задач
+        uri = URI.create(ADDR + "/tasks/task/" + "?id=" + taskId3);
+        request = HttpRequest.newBuilder().uri(uri).DELETE().build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), "Ошибка при удалении задачи c id: "
+                + taskId3);
+        uri = URI.create(ADDR + "/tasks/history/");
+        request = HttpRequest.newBuilder()
+                .uri(uri)
+                .GET()
+                .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(),
+                "Неверный статус обработки запроса на получения списка истории" + uri.getPath());
+        final List<Task> task1 = parseTasks(response.body());
+        assertTrue(task1.isEmpty(), "После удаления задач из списка историй полученный списо истории не пуст");
     }
 
     private void createTasks() {
@@ -488,20 +539,21 @@ class HttpTaskServerTest<T extends FileBackedTasksManager> {
         subId31 = taskManager.createSubtask(
                 new Subtask(epicId3, "sud31", "this sub31"));
     }
+
     private List<Task> parseTasks(String json) {
         List<Task> tasks = new ArrayList<>();
         final JsonElement jsonElement = JsonParser.parseString(json);
-        if(jsonElement.isJsonNull()){
+        if (jsonElement.isJsonNull()) {
             return tasks;
         }
         final Collection<JsonElement> JsonElements;
-        if(jsonElement.isJsonArray()){
+        if (jsonElement.isJsonArray()) {
             JsonElements = jsonElement.getAsJsonArray().asList();
         } else {
             JsonElements = jsonElement.getAsJsonObject().asMap().values();
         }
         for (JsonElement element : JsonElements) {
-            if(element.isJsonNull()){
+            if (element.isJsonNull()) {
                 continue;
             }
             TaskType type = gson.fromJson(element.getAsJsonObject().get("type"), TaskType.class);

@@ -28,7 +28,7 @@ public class HandlerUtilities {
             final String requestQuery = exchange.getRequestURI().getQuery();
 
             final Map<String, String> parametrs = queryToMap(requestQuery);
-            if(parametrs == null){
+            if (parametrs == null) {
                 return null;
             }
             final String strId = parametrs.get("id");

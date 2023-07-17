@@ -25,7 +25,7 @@ public class EpicSubtasksHandler extends TasksHandler {
                 return new Pair<>(HttpURLConnection.HTTP_BAD_REQUEST, "");
             }
             final Epic epic = manager.getEpic(parametrId);
-            if(epic == null) {
+            if (epic == null) {
                 return new Pair<>(HttpURLConnection.HTTP_NOT_FOUND, "");
             }
             String json = getJsonEntities(parametrId);
