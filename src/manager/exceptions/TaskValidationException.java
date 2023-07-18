@@ -5,7 +5,4 @@ public class TaskValidationException extends RuntimeException {
         super(message);
     }
 
-    public TaskValidationException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

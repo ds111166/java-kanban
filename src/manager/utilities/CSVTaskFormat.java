@@ -30,7 +30,7 @@ public class CSVTaskFormat {
                 .append(",")
                 .append(task.getStartTime())
                 .append(",")
-                .append(taskType.equals(TaskType.EPIC) ? ((Epic) task).getEndTime() : "")
+                .append(taskType.equals(TaskType.EPIC) ? (task).getEndTime() : "")
                 .append(",")
                 .append(taskType.equals(TaskType.SUBTASK) ? ((Subtask) task).getEpicId() : "");
         return sb.toString();
@@ -124,7 +124,7 @@ public class CSVTaskFormat {
             if (textDateTime == null
                     || textDateTime.isEmpty()
                     || textDateTime.isBlank()
-                    || "null".equals(textDateTime.toLowerCase())) {
+                    || "null".equalsIgnoreCase(textDateTime)) {
                 return null;
             }
             return LocalDateTime.parse(textDateTime);
@@ -139,7 +139,7 @@ public class CSVTaskFormat {
             if (textStatus == null
                     || textStatus.isEmpty()
                     || textStatus.isBlank()
-                    || "null".equals(textStatus.toLowerCase())) {
+                    || "null".equalsIgnoreCase(textStatus)) {
                 return null;
             }
             return Status.valueOf(textStatus);
