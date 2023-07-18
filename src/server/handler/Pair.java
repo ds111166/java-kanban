@@ -5,8 +5,8 @@ import java.util.Objects;
 public class Pair<U, V> {
     public final U key;
     public final V value;
-    public Pair(U first, V second)
-    {
+
+    public Pair(U first, V second) {
         this.key = first;
         this.value = second;
     }
@@ -18,10 +18,11 @@ public class Pair<U, V> {
     public V getValue() {
         return value;
     }
-    public static <U, V> Pair <U, V> of(U a, V b)
-    {
+
+    public static <U, V> Pair<U, V> of(U a, V b) {
         return new Pair<>(a, b);
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
