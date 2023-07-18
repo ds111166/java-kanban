@@ -32,8 +32,6 @@ public class HttpTaskManager extends FileBackedTasksManager {
 
     @Override
     protected void save() {
-
-        ;
         String[] packData = new String[]{gson.toJson(tasks),
                 gson.toJson(CSVTaskFormat.historyToString(history))};
 
@@ -70,9 +68,7 @@ public class HttpTaskManager extends FileBackedTasksManager {
             }
             epic.addSubtaskId(subtaskId);
         }
-        for (Integer id : tasks.keySet()) {
-            prioritizedTasks.add(id);
-        }
+        prioritizedTasks.addAll(tasks.keySet());
 
         CSVTaskFormat
                 .historyFromString(gson.fromJson(packData[1], String.class))

@@ -1,5 +1,7 @@
 package client;
 
+import manager.exceptions.ManagerSaveException;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -44,11 +46,13 @@ public class KVTaskClient {
 
     private String send(HttpRequest request) {
         try {
-            return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new ManagerSaveException("Can't do save request, status code: " + response.statusCode());
+            }
+            return response.body();
         } catch (InterruptedException | IOException ex) {
-            System.out.println("При выполнении запроса возникла исключительная ситуаци:\n"
-                    + ex.getMessage());
-            return null;
+            throw new ManagerSaveException("Can't do save request", ex);
         }
 
     }
