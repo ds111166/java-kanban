@@ -20,10 +20,11 @@ class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
     public static void createKVServerForTest() {
         try {
             server = new KVServer();
+            server.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        server.start();
+
     }
 
     @AfterAll
